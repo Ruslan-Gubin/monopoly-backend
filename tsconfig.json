@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2018",
+    "lib": ["es5","ES6","dom", "dom.iterable"],
+    "module": "NodeNext",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "sourceMap": false,
+    "removeComments": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "./src/__tests__", "./src/types"], 
+  "lib": ["esnext"],
+  "ts-node": {
+    "esm": true
+  }
+}
+
+

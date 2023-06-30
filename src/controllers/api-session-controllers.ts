@@ -1,6 +1,8 @@
 import { sessionService } from '../service/sessionService.js';
 import { authController } from './api-auth-controlers.js';
 import * as types from '../types/sessionTypes/index.js';
+import { messageService } from '../service/message-service.js';
+import { sessionConfirmationService } from '../service/session-confirmation.js';
 
 
 class SessionController {
@@ -9,7 +11,7 @@ class SessionController {
 
     ws.on('message', (msq: string) => {
       const message: types.ISessionMessageWs = JSON.parse(msq);
-      console.log(message)  
+      // console.log(message)  
       
       switch (message.method) {
         case 'connection':
@@ -17,7 +19,7 @@ class SessionController {
           authController.setAuthOnline(true, message.id) 
           break;
           case 'createSession':
-            sessionService.createSession(ws, message)
+            sessionService.createSession(ws, message) 
           break;
           case 'removeSession':
             sessionService.removeSession(ws, message)
@@ -31,6 +33,15 @@ class SessionController {
           case 'disconect':  
             authController.setAuthOnline(false, message.body.id)
             sessionService.disconectUser(ws, message.body)
+          break;
+          case 'createMessage':  
+            messageService.createMessage(ws, message.body)
+          break;
+          case 'sessionStartConfirmation':  
+          sessionConfirmationService.startConfirmation(ws, message.body) 
+          break;
+          case 'confirmParticipationGame':  
+          sessionConfirmationService.confirmGame(ws, message.body) 
           break;
           case 'close':
             // ws.close();  

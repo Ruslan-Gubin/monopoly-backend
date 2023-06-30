@@ -1,12 +1,6 @@
 import { sessionModel } from '../models/index.js';
-import { aWss } from '../index.js';
-const broadcastConnection = (id, ws, message) => {
-    aWss.clients.forEach(client => {
-        if (id === client.id) {
-            client.send(JSON.stringify(message));
-        }
-    });
-};
+import { broadcastConnection } from '../utils/broadcastConnection.js';
+import { messageService } from './message-service.js';
 class SessionService {
     constructor(model) {
         this.model = model;
@@ -18,9 +12,11 @@ class SessionService {
         if (!sessions)
             return;
         ws.send(JSON.stringify({ method: 'connectData', data: sessions }));
+        const selectionMessages = await messageService.getMessages();
         const broadData = {
             method: 'connectedUser',
             title: `Пользователь ${message.fullName} подключен`,
+            messages: selectionMessages,
         };
         broadcastConnection(this.id, ws, broadData);
     }
@@ -116,6 +112,17 @@ class SessionService {
             data: { ...updateSession._doc },
         };
         broadcastConnection(this.id, ws, boardData);
+    }
+    async getOneSession(id) {
+        if (!id) {
+            throw new Error('Не получено ID запроса');
+        }
+        const findSession = await this.model.findById(id);
+        if (!findSession) {
+            throw new Error('Не удалось найти сессию');
+        }
+        ;
+        return findSession;
     }
 }
 export const sessionService = new SessionService(sessionModel);

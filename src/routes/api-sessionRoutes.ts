@@ -1,7 +1,7 @@
+import expressWs from 'express-ws';
 import express from 'express';
 import { sessionController } from '../controllers/api-session-controllers.js';
 import { handleValidationErrors } from "../utils/index.js";
-import expressWs from 'express-ws';
 
   
 expressWs(express())

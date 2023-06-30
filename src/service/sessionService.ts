@@ -1,16 +1,9 @@
 import { Model } from 'mongoose';
 import { sessionModel } from '../models/index.js';
 import * as types from '../types/sessionTypes/index.js';
-import { aWss } from '../index.js';
+import { broadcastConnection } from '../utils/broadcastConnection.js';
+import { messageService } from './message-service.js';
 
-const broadcastConnection = (id: number, ws: any, message: unknown) => {
-  aWss.clients.forEach(client  => {
-    //@ts-ignore
-    if (id === client.id) {
-      client.send(JSON.stringify(message)) 
-    }
-  })
-}
 
 class SessionService {
   id = 555
@@ -25,9 +18,12 @@ class SessionService {
   
     ws.send(JSON.stringify({method: 'connectData', data: sessions}))
 
+    const selectionMessages = await messageService.getMessages()
+
     const broadData = {
       method: 'connectedUser', 
       title: `Пользователь ${message.fullName} подключен`,
+      messages: selectionMessages,
     }
 
     broadcastConnection(this.id, ws, broadData) 
@@ -82,7 +78,7 @@ class SessionService {
     
     const boardData = {
       method: 'createSession',
-      data: {...newSession._doc},
+      data: {...newSession._doc}, 
     }
 
     broadcastConnection(this.id, ws, boardData)
@@ -164,6 +160,20 @@ class SessionService {
       }
 
       broadcastConnection(this.id, ws, boardData)
+  }
+
+  async getOneSession(id: string) {
+    if (!id) {
+      throw new Error('Не получено ID запроса')
+    }
+
+    const findSession = await this.model.findById(id)
+
+      if (!findSession) {
+        throw new Error('Не удалось найти сессию')
+      };
+      
+  return findSession
   }
 
 }

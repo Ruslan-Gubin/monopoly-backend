@@ -1,46 +1,99 @@
-import { broadcastConnection } from '../utils/broadcastConnection.js';
-import { sessionService } from './sessionService.js';
+import { WebSocket } from 'ws';
+import { SessionService } from './session-service.js';
+import { broadcastConnection, logger } from '../utils/index.js';
+import * as DTO from '../dtos/index.js';
 
-class SessionConfirmationService {
-  id = 555;
-  constructor() {}
+export class SessionConfirmationService {
+  private id: number;
+  private sessionService: SessionService;
 
-  async startConfirmation(ws: any, body: { sessionId: string }) {
-    if (!body.sessionId) {
-      throw new Error('Не получен ID сессии');
-    }
-    
-    const sessionId = body.sessionId
-    
-    const session = await sessionService.getOneSession(sessionId)
-    
-    if (!session) {
-      throw new Error('Не найдена сессия');
-    }
-
-    const broadData = {
-      method: 'sessionStartConfirmation',
-      players: session.players,
-      sessionId: session._id
-    };
-
-    broadcastConnection(this.id, ws, broadData);
+  constructor({ sessionService, sessionId }: { sessionService: SessionService; sessionId: number }) {
+    this.id = sessionId;
+    this.sessionService = sessionService;
   }
 
-  async confirmGame(ws: any, body: { authId: string, sessionId: string }) {
-    const { authId, sessionId } = body
+  async startConfirmation(
+    ws: WebSocket,
+    body: DTO.StartConfirmationDTO,
+  ): Promise<void | { error: unknown; text: string }> {
+    try {
+      if (!body.sessionId) {
+        throw new Error('Failed to sessionId undefined');
+      }
 
-    const broadData = {
-      method: 'confirmParticipationGame',
-      player: authId,
-      sessionId: sessionId
-    };
+      const sessionId = body.sessionId;
 
-    broadcastConnection(this.id, ws, broadData);
+      await this.sessionService.setConfirmSession(sessionId, true);
+      const session = await this.sessionService.getOneSession(sessionId);
+      const sessions = await this.sessionService.getAllSessions();
 
+      if (!session || !sessions) {
+        throw new Error('Не найдена сессия');
+      }
+
+      const broadData = {
+        method: 'sessionStartConfirmation',
+        players: session.players,
+        sessionId: session._id,
+        sessions,
+      };
+
+      broadcastConnection(this.id, ws, broadData);
+    } catch (error) {
+      logger.error('Failed to start confirmation service:', error);
+      return { error, text: 'Failed to start confirmation service' };
+    }
   }
 
-  
+  async confirmGame(ws: WebSocket, body: DTO.ConfirmGameDTO): Promise<void | { error: unknown; text: string }> {
+    try {
+      const { authId, sessionId } = body;
+
+      if (!authId || !sessionId) {
+        throw new Error('Failed to auhtId or sessionId not found');
+      }
+
+      const broadData = {
+        method: 'confirmParticipationGame',
+        player: authId,
+        sessionId: sessionId,
+      };
+
+      broadcastConnection(this.id, ws, broadData);
+    } catch (error) {
+      logger.error('Failed to confirm game service:', error);
+      return { error, text: 'Failed to confirm game service' };
+    }
+  }
+
+  async cancelParticipationGame(ws: WebSocket, body: DTO.CancelParticipationGameDTO) {
+    try {
+      const { authId, sessionId, authName } = body;
+
+      if (!authId || !sessionId || !authName) {
+        throw new Error('Failed to auhtId or sessionId or authName not found');
+      }
+
+      await this.sessionService.setConfirmSession(sessionId, false);
+
+      const sessions = await this.sessionService.getAllSessions();
+
+      if (!sessions) {
+        throw new Error('Failed to get all sessions in service');
+      }
+
+      const broadData = {
+        method: 'cancelParticipationGame',
+        player: authId,
+        sessionId: sessionId,
+        authName,
+        sessions,
+      };
+
+      broadcastConnection(this.id, ws, broadData);
+    } catch (error) {
+      logger.error('Failed to cancel participation service:', error);
+      return { error, text: 'Failed to cancel participation service:' };
+    }
+  }
 }
-
-export const sessionConfirmationService = new SessionConfirmationService();

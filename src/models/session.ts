@@ -1,5 +1,5 @@
-import mongoose from "mongoose";
-import { ISession } from "../types/sessionTypes/index.js";
+import mongoose from 'mongoose';
+import { ISession } from '../types/index.js';
 
 const SessionShema = new mongoose.Schema<ISession>(
   {
@@ -8,16 +8,22 @@ const SessionShema = new mongoose.Schema<ISession>(
       require: true,
     },
     players: {
-      type: [{
-        id:{type: String, required: true}, 
-        fullName:{type: String, required: true}, 
-        img:{type: String, required: true}
-      }],
-      
+      type: [
+        {
+          id: { type: String, required: true },
+          fullName: { type: String, required: true },
+          img: { type: String, required: true },
+        },
+      ],
+
       default: [],
-    }
+    },
+    isConfirm: {
+      type: Boolean,
+      default: false,
+    },
   },
-  { timestamps: true }// дата создания
+  { timestamps: true },
 );
 
-export const sessionModel = mongoose.model<ISession>("Session", SessionShema);
+export const SessionModel = mongoose.model<ISession>('Session', SessionShema);

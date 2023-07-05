@@ -1,1 +1,1 @@
-export { productValedation } from './productValidation.js';
+export * from './authValudation.js';

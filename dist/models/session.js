@@ -1,16 +1,22 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 const SessionShema = new mongoose.Schema({
     owner: {
         type: String,
         require: true,
     },
     players: {
-        type: [{
+        type: [
+            {
                 id: { type: String, required: true },
                 fullName: { type: String, required: true },
-                img: { type: String, required: true }
-            }],
+                img: { type: String, required: true },
+            },
+        ],
         default: [],
-    }
+    },
+    isConfirm: {
+        type: Boolean,
+        default: false,
+    },
 }, { timestamps: true });
-export const sessionModel = mongoose.model("Session", SessionShema);
+export const SessionModel = mongoose.model('Session', SessionShema);

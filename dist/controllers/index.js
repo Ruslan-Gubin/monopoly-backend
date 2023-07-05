@@ -1,2 +1,4 @@
-export { authController } from "./api-auth-controlers.js";
-export { sessionController } from "./api-session-controllers.js";
+export * from './api-auth-controlers.js';
+export * from './api-session-controllers.js';
+export * from './api-message-contorller.js';
+export * from './api-confirmation-controllers.js';

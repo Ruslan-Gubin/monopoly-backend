@@ -1,3 +1,4 @@
-export { authService } from './authService.js';
-export { sessionService } from './sessionService.js';
-export { sessionConfirmationService } from './session-confirmation.js';
+export * from './auth-service.js';
+export * from './session-service.js';
+export * from './session-confirmation.js';
+export * from './message-service.js';

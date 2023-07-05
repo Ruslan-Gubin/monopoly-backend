@@ -1,25 +1,53 @@
 import { MessageModel } from '../models/index.js';
 import { broadcastConnection } from '../utils/broadcastConnection.js';
-class MessageService {
-    constructor(model) {
-        this.model = model;
-        this.id = 555;
+import { logger } from '../utils/loger.js';
+export class MessageService {
+    constructor({ cache, sessionId }) {
+        this.allMessagesKey = 'allMessages';
+        this.sessionId = sessionId;
+        this.model = MessageModel;
+        this.cache = cache;
     }
     async createMessage(ws, body) {
-        if (!body) {
-            throw new Error('Не получены данные нового пользователя');
+        try {
+            if (!body) {
+                throw new Error('Failed to boody undefined');
+            }
+            const newMessage = await this.model.create({
+                ...body,
+            });
+            let cachedMessages = (this.cache.getValueInKey(this.allMessagesKey));
+            if (!cachedMessages) {
+                this.cache.addKeyInCache(this.allMessagesKey, [newMessage]);
+            }
+            else {
+                cachedMessages.unshift(newMessage);
+            }
+            const broadData = {
+                method: 'createMessage',
+                newMessage,
+            };
+            broadcastConnection(this.sessionId, ws, broadData);
+            return newMessage;
         }
-        const newMessage = await this.model.create({
-            ...body,
-        });
-        const broadData = {
-            method: 'createMessage',
-            newMessage,
-        };
-        broadcastConnection(this.id, ws, broadData);
+        catch (error) {
+            logger.error('Failed to create message:', error);
+            return { error, text: 'Failed to create messages in service' };
+        }
     }
     async getMessages() {
-        return await this.model.find({}).sort({ createdAt: -1 });
+        try {
+            let messagesCache = (this.cache.getValueInKey(this.allMessagesKey));
+            if (!messagesCache) {
+                const allMessagesDB = await this.model.find({}).sort({ createdAt: -1 });
+                messagesCache = allMessagesDB;
+                this.cache.addKeyInCache(this.allMessagesKey, allMessagesDB);
+            }
+            return messagesCache;
+        }
+        catch (error) {
+            logger.error('Failed to get all messages sesvice:', error);
+            return { error, text: 'Failed to get all messages in service' };
+        }
     }
 }
-export const messageService = new MessageService(MessageModel);

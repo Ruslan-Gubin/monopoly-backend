@@ -1,2 +1,2 @@
-export { authRouter } from "./api-authRoutes.js";
-export { sessionRouter } from "./api-sessionRoutes.js";
+export * from "./api-authRoutes.js";
+export * from "./api-sessionRoutes.js";

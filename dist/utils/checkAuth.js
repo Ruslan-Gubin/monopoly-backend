@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 const checkAuth = (req, res, next) => {
-    const token = (req.headers.authentication || "").replace(/Bearer\s?/, "");
+    var _a;
+    const token = (((_a = req.headers.authentication) === null || _a === void 0 ? void 0 : _a.toString()) || "").replace(/Bearer\s?/, "");
     if (token) {
         try {
             const decoded = jwt.verify(token, "secret123");
@@ -9,13 +10,13 @@ const checkAuth = (req, res, next) => {
         }
         catch (error) {
             console.log(error, "Нет доступа");
-            return res.status(403).json({
+            res.status(403).json({
                 message: "Нет доступа",
             });
         }
     }
     else {
-        return res.status(402).json({
+        res.status(402).json({
             message: "Нет доступа!",
         });
     }

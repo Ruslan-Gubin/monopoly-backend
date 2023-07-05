@@ -1,6 +1,8 @@
 import  { Request } from "express";
 
-interface IRequestBody<T> extends Request {body: T}
+interface IRequestBody<T> extends Request {
+  body: T;
+}
 
 type IRequestParams<T> = Request<T>
 type IRequestQuery<T> = Request<{},{},{},T>

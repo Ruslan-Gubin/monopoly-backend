@@ -1,6 +1,6 @@
 import {  Document } from './index.js';
 
-interface SessionPlayer {
+export interface SessionPlayer {
   id: string;
   fullName: string;
   img: string;

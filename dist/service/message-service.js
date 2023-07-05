@@ -11,7 +11,7 @@ export class MessageService {
     async createMessage(ws, body) {
         try {
             if (!body) {
-                throw new Error('Failed to boody undefined');
+                throw new Error('Failed to body undefined');
             }
             const newMessage = await this.model.create({
                 ...body,

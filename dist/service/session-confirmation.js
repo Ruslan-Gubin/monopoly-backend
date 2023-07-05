@@ -11,7 +11,7 @@ export class SessionConfirmationService {
             }
             const sessionId = body.sessionId;
             await this.sessionService.setConfirmSession(sessionId, true);
-            const session = await this.sessionService.getOneSession(sessionId);
+            const session = (await this.sessionService.getOneSession(sessionId));
             const sessions = await this.sessionService.getAllSessions();
             if (!session || !sessions) {
                 throw new Error('Не найдена сессия');

@@ -25,7 +25,7 @@ export class MessageService {
   ): Promise<types.IMessage | types.IReturnErrorObj> {
     try {
       if (!body) {
-        throw new Error('Failed to boody undefined');
+        throw new Error('Failed to body undefined');
       }
 
       const newMessage = await this.model.create({
@@ -37,7 +37,7 @@ export class MessageService {
       if (!cachedMessages ) {
         this.cache.addKeyInCache(this.allMessagesKey, [newMessage])
       } else { 
-        cachedMessages .unshift(newMessage)
+        cachedMessages.unshift(newMessage)
       }
 
       const broadData = {

@@ -1,9 +1,11 @@
 import { aWss } from '../index.js';
+import { ExtendedWebSocket } from '../types/index.js';
+import { WebSocket } from 'ws';
 
-export const broadcastConnection = (id: number, ws: any, message: unknown) => {
-  aWss.clients.forEach(client  => {
-    //@ts-ignore
-    if (id === client.id) {
+export const broadcastConnection = <T>(id: number, ws: WebSocket | ExtendedWebSocket, message: T) => {
+  aWss.clients.forEach((client: WebSocket)  => {
+    const extendedClient = client as unknown  as ExtendedWebSocket;
+    if (id === extendedClient.id) {
       client.send(JSON.stringify(message)) 
     }
   })

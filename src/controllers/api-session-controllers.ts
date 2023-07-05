@@ -2,6 +2,7 @@ import WebSocket from 'ws';
 import { SessionService } from '../service/index.js';
 import * as DTO from '../dtos/index.js';
 import { logger } from '../utils/loger.js';
+import { ExtendedWebSocket } from '../types/ExtendedWebSocket.js';
 
 export class SessionController {
   constructor(private sessionService: SessionService) {}
@@ -42,9 +43,9 @@ export class SessionController {
 
 
   /** Подключение пользователя к сокету */
-  private connectWS = async (ws: WebSocket, message: DTO.SessionConnectDTO) => {
+  private connectWS = async (ws: ExtendedWebSocket | WebSocket, message: DTO.SessionConnectDTO) => {
     try {
-      await this.sessionService.connectedSession(ws, message);
+      await this.sessionService.connectedSession((ws as ExtendedWebSocket), message);
     } catch (error) {
       logger.error('Failed to connect WebSocket:', error);
       ws.send(JSON.stringify({ error: 'Failed to connect WebSocket' }));

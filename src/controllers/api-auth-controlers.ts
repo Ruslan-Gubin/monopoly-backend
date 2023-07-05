@@ -3,33 +3,32 @@ import { Response } from 'express-serve-static-core';
 import { IRequestBody, IRequestParams } from '../types/IRequestRespons/index.js';
 
 import { AuthService } from '../service/index.js';
-import * as DTO  from '../dtos/index.js';
+import * as DTO from '../dtos/index.js';
 import { logger } from '../utils/index.js';
-
 
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-    /** Получаем событие с WebSocket для статуса online */
-    handleMessage = async(ws: WebSocket, message: any) => {
-      const method = message.method
-  
-      try {
-        switch(method) {
-          case 'connection':
-            const connectId = message.id
-            await  this.setAuthOnline(ws, connectId, true)
-            break;
-            case 'disconect':
-            const disconectId = message.body.id
-          await  this.setAuthOnline(ws, disconectId, false)
+  /** Получаем событие с WebSocket для статуса online */
+  handleMessage = async (ws: WebSocket, message: any) => {
+    const method = message.method;
+
+    try {
+      switch (method) {
+        case 'connection':
+          const connectId = message.id;
+          await this.setAuthOnline(ws, connectId, true);
           break;
-        }
-      } catch (error) {
-        logger.error('Failed to handle WebSocket message:', error);
-        ws.send(JSON.stringify({ error: 'Failed to AuthController' }));
+        case 'disconect':
+          const disconectId = message.body.id;
+          await this.setAuthOnline(ws, disconectId, false);
+          break;
       }
-    };
+    } catch (error) {
+      logger.error('Failed to handle WebSocket message:', error);
+      ws.send(JSON.stringify({ error: 'Failed to AuthController' }));
+    }
+  };
 
   /** Создание пользователя */
   createUser = async (req: IRequestBody<DTO.CreatedUserDTO>, res: Response) => {
@@ -104,12 +103,10 @@ export class AuthController {
   /** Установить состояние онлайн */
   setAuthOnline = async (ws: WebSocket, id: string, status: boolean) => {
     try {
-    await this.authService.setAuthOnline(status, id);
+      await this.authService.setAuthOnline(status, id);
     } catch (error) {
       logger.error('Failed to user set online status:', error);
       ws.send(JSON.stringify({ error: 'Failed to setAuthOnline' }));
     }
   };
-
-
 }

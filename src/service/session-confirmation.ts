@@ -2,6 +2,8 @@ import { WebSocket } from 'ws';
 import { SessionService } from './session-service.js';
 import { broadcastConnection, logger } from '../utils/index.js';
 import * as DTO from '../dtos/index.js';
+import { IReturnErrorObj } from '../types/IReturnErrorObj.js';
+import { ISession } from '../types/index.js';
 
 export class SessionConfirmationService {
   private id: number;
@@ -15,7 +17,7 @@ export class SessionConfirmationService {
   async startConfirmation(
     ws: WebSocket,
     body: DTO.StartConfirmationDTO,
-  ): Promise<void | { error: unknown; text: string }> {
+  ): Promise<void | IReturnErrorObj> {
     try {
       if (!body.sessionId) {
         throw new Error('Failed to sessionId undefined');
@@ -24,9 +26,9 @@ export class SessionConfirmationService {
       const sessionId = body.sessionId;
 
       await this.sessionService.setConfirmSession(sessionId, true);
-      const session = await this.sessionService.getOneSession(sessionId);
+      const session = (await this.sessionService.getOneSession(sessionId)) as ISession ;
       const sessions = await this.sessionService.getAllSessions();
-
+      
       if (!session || !sessions) {
         throw new Error('Не найдена сессия');
       }
@@ -45,7 +47,7 @@ export class SessionConfirmationService {
     }
   }
 
-  async confirmGame(ws: WebSocket, body: DTO.ConfirmGameDTO): Promise<void | { error: unknown; text: string }> {
+  async confirmGame(ws: WebSocket, body: DTO.ConfirmGameDTO): Promise<void | IReturnErrorObj> {
     try {
       const { authId, sessionId } = body;
 

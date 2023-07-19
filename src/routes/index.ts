@@ -1,3 +1,4 @@
 export * from "./api-authRoutes.js";
 export * from "./api-sessionRoutes.js";
+export * from "./api-cellRoutes.js";
 

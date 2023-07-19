@@ -18,6 +18,11 @@ export interface IPlayer extends Document {
    */
   position: number;
   /**
+   * Предыдущая позиция на поле.
+   * @type {number}
+   */
+  previous_position: number;
+  /**
    * Флаг, указывающий, является ли игрок активным или проигравшим.
    * @type {boolean}
    */
@@ -47,6 +52,11 @@ export interface IPlayer extends Document {
    * @type {string}
    */
   board_id: string;  
+  /**
+   * Цвет игровой фишки.
+   * @type {string}
+   */
+  color: string;  
 }
 
 

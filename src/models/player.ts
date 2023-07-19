@@ -16,6 +16,11 @@ const PlayerSchema: Schema<IPlayer> = new Schema({
     required: true,
     default: 0,
   },
+  previous_position: {
+    type: Number,
+    required: true,
+    default: 0,
+  },
   is_active: {
     type: Boolean,
     required: true,
@@ -39,6 +44,10 @@ const PlayerSchema: Schema<IPlayer> = new Schema({
   board_id: {
     type: String,
     required: true,
+  },
+  color: {
+    type: String,
+    default: 'white',
   },
 },
 { timestamps: true },

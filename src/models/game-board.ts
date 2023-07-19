@@ -2,6 +2,11 @@ import { Schema,  model } from 'mongoose';
 import { IGameBoard } from '../types/index.js';
 
 const GameBoardSchema: Schema<IGameBoard> = new Schema({
+  board_name: {
+    type: String,
+    required: true,
+    default: 'nep'
+  },
   cells: { 
     type: [Schema.Types.ObjectId],
     ref: 'CelldModel',

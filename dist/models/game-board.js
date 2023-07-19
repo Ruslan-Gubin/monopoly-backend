@@ -1,5 +1,10 @@
 import { Schema, model } from 'mongoose';
 const GameBoardSchema = new Schema({
+    board_name: {
+        type: String,
+        required: true,
+        default: 'nep'
+    },
     cells: {
         type: [Schema.Types.ObjectId],
         ref: 'CelldModel',

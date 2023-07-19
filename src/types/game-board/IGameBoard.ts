@@ -7,6 +7,11 @@ import {  Document, IBank, ICell, IActionCard, IDice, IPlayer } from '../index.j
  */
 export interface IGameBoard extends Document {
   /**
+   * Название игровой доски
+   * @type { string }
+   */
+  board_name: string;
+  /**
    * Mассив игровых клеток
    * @type { [ICell] }
    */

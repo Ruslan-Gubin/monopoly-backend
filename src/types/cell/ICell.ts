@@ -7,6 +7,11 @@ import { ICloudinaryImage, Document } from '../index.js';
  */
 export interface ICell extends Document {
   /**
+   * Название игровой доски
+   * @type {string}
+   */
+  board_name: string;
+  /**
    * «Старт», «Свободная клетка», «Игровая карта»
    * @type {string}
    */
@@ -17,15 +22,20 @@ export interface ICell extends Document {
    */
   name: string;
   /**
+   * Напровление карточки
+   * @type {string}
+   */
+  direction: string;
+  /**
    * Цена покупки клетки
    * @type {number}
    */
   price: number;
   /**
    * Стоимость аренды за попадание на эту клетку.
-   * @type {number}
+   * @type {[number]}
    */
-  rent: number;
+  rent: number[];
   /**
    * Цвет клетки.
    * @type {string}
@@ -41,4 +51,27 @@ export interface ICell extends Document {
    * @type {ICloudinaryImage}
    */
   image: ICloudinaryImage;
+  /**
+   * Стоимость покупки дома.
+   * @type {number}
+   */
+  house_cost: number;
+  /**
+   * Стоимость покупки отеля.
+   * @type {number}
+   */
+  hotel_cost: number;
+  /**
+   * Стоимость заложить недвижимость.
+   * @type {number}
+   */
+  mortgage_value: number;
+  /**
+   * Позиция на доске (матрица).
+   * @type {number}
+   */
+  position_matrix: {
+    row_index: number;
+    column_index: number;
+  };
 }

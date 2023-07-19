@@ -23,6 +23,7 @@ app.use(express.json({ limit: '50mb' }));
 })();
 app.use(routes.authRouter);
 app.use(routes.sessionRouter);
+app.use(routes.cellRouter);
 app.listen(process.env['PORT'] || 4444, () => {
     logger.connectSuccess(`Listening port ${process.env['PORT'] || 4444}`);
 });

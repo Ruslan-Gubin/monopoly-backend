@@ -1,6 +1,6 @@
 import { Model, UpdateWriteOpResult } from 'mongoose';
 import * as types from '../types/index.js';
-import { CelldModel } from '../models/index.js';
+import { CellModel } from '../models/index.js';
 import * as DTO from '../dtos/index.js';
 import { CacheManager, logger } from '../utils/index.js';
 
@@ -10,7 +10,7 @@ export class CellService {
   private cache: CacheManager<types.ICell[] | types.ICell>;
 
   constructor({ cache }: { cache: CacheManager<types.ICell> }) {
-    this.model = CelldModel;
+    this.model = CellModel;
     this.cache = cache;
   }
 

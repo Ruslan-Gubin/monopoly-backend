@@ -53,4 +53,4 @@ const CellSchema: Schema<ICell> = new Schema({
   },
 });
 
-export const CelldModel = model<ICell>('Cell', CellSchema);
+export const CellModel = model<ICell>('Cell', CellSchema);

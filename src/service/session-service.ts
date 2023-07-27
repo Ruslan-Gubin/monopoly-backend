@@ -38,7 +38,7 @@ export class SessionService {
         throw new Error('Failed to get all sessions');
       }
 
-      ws.send(JSON.stringify({ method: 'connectData', data: sessions }));
+      ws.send(JSON.stringify({ method: 'connectData', data: sessions })); 
 
       const selectionMessages = await this.messageService.getMessages();
 

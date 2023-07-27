@@ -38,7 +38,7 @@ export class ConfirmationController {
     }
   };
 
-  /** Пользователь оповещает о готовности к игре */
+  /** Пользователь оповещает о готовности к игре */ 
   private confirmParticipationGame = async (
     ws: WebSocket,
     message: DTO.SessionConfirmParticipationDTO,

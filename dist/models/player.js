@@ -39,13 +39,25 @@ const PlayerSchema = new Schema({
         required: true,
         default: 0,
     },
-    board_id: {
-        type: String,
-        required: true,
-    },
     color: {
         type: String,
         default: 'white',
+    },
+    image: {
+        type: String,
+    },
+    user_id: {
+        type: Schema.Types.ObjectId,
+        ref: 'UserModel',
+        require: true,
+    },
+    syndicate: {
+        type: [String],
+        default: [],
+    },
+    board_id: {
+        type: Schema.Types.ObjectId,
+        ref: 'GameBoardModel',
     },
 }, { timestamps: true });
 export const PlayerModel = model('Player', PlayerSchema);

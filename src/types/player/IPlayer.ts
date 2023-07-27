@@ -1,4 +1,4 @@
-import { IProperty } from '../index.js';
+import { IGameBoard, IProperty, IUser } from '../index.js';
 import { Document } from '../Document/index.js'
 
 /**
@@ -46,17 +46,32 @@ export interface IPlayer extends Document {
    * Количество карточек "Выход из тюрьмы".
    * @type {number}
    */
-  getOutOfJailCards: number; 
-  /**
-   * ID игровой доски.
-   * @type {string}
-   */
-  board_id: string;  
+  getOutOfJailCards: number;  
   /**
    * Цвет игровой фишки.
    * @type {string}
    */
   color: string;  
+  /**
+   * Фото игрока.
+   * @type { string }
+   */
+  image: string;  
+  /**
+   * ID пользователя.
+   * @type { string }
+   */
+  user_id: IUser;  
+  /**
+   * список ячеек синдиката.
+   * @type { string }
+   */
+  syndicate: string[];  
+  /**
+   * ID игровой доски.
+   * @type { IGameBoard }
+   */
+  board_id: IGameBoard;  
 }
 
 

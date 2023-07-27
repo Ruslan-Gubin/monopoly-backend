@@ -7,21 +7,31 @@ const GameBoardSchema: Schema<IGameBoard> = new Schema({
     required: true,
     default: 'nep'
   },
-  cells: { 
-    type: [Schema.Types.ObjectId],
-    ref: 'CelldModel',
-    default: [],
-  },
-  currentPlayerId: {
+  currentPlayerId: { //Текущая очередь игрока
     type: String,
+    required: true,
   },
-  currentCellsId: {
-    type: String,
+  currentCellPosition: { //Текущая позиция  игрока
+    type: Number,
+    default: 0,
   },
-  action_cards: {
+  chanse_cards: {  
     type: [Schema.Types.ObjectId], 
     ref: 'ActionCardModel',
     default: [],
+  },
+  lottery_cards: {  
+    type: [Schema.Types.ObjectId], 
+    ref: 'ActionCardModel',
+    default: [],
+  },
+  chanse_current: {  
+    type: Number, 
+    default: 0,
+  },
+  lottery_current: {  
+    type: Number, 
+    default: 0,
   },
   players: {
     type: [Schema.Types.ObjectId],
@@ -32,20 +42,19 @@ const GameBoardSchema: Schema<IGameBoard> = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'DiceModel',
   },
-  bank: {
-    type: Schema.Types.ObjectId,
-    ref: 'BankModel',
-  },
-  available_cells: {
-    type: [String],
-    require: true,
-    default: [],
+  free_propertyes: {
+    type: [Schema.Types.ObjectId],
+    ref: 'CellModel',
   },
   mortgaged_cells: {
     type: [String],
     require: true,
     default: [],
-  }
+  },
+  occupied_properties: {
+    type: [String],
+    default: [],
+  },
 },
 { timestamps: true },
 );

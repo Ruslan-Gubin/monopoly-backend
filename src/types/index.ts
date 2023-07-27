@@ -4,7 +4,6 @@ export * from './property/index.js';
 export * from './player/index.js';
 export * from './game-board/index.js';
 export * from './dice/index.js';
-export * from './bank/index.js';
 export * from './action-card/index.js';
 export * from './IRequestRespons/index.js';
 export * from './cell/index.js';

@@ -1,9 +1,9 @@
-import { CelldModel } from '../models/index.js';
+import { CellModel } from '../models/index.js';
 import { logger } from '../utils/index.js';
 export class CellService {
     constructor({ cache }) {
         this.allCellsKey = 'allCells';
-        this.model = CelldModel;
+        this.model = CellModel;
         this.cache = cache;
     }
     async create(body) {

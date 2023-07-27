@@ -1,6 +1,6 @@
 import { Schema, model } from 'mongoose';
 const DiceSchema = new Schema({
-    player_id: {
+    current_id: {
         type: String,
     },
     dice1: {
@@ -16,9 +16,6 @@ const DiceSchema = new Schema({
         type: Number,
     },
     prev_player: {
-        type: String,
-    },
-    board_id: {
         type: String,
     },
     isDouble: {

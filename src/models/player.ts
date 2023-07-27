@@ -6,7 +6,7 @@ const PlayerSchema: Schema<IPlayer> = new Schema({
     type: String,
     required: true,
   },
-  money: {
+  money: { 
     type: Number,
     required: true,
     default: 1500,
@@ -41,13 +41,25 @@ const PlayerSchema: Schema<IPlayer> = new Schema({
     required: true,
     default: 0,
   },
-  board_id: {
-    type: String,
-    required: true,
-  },
   color: {
     type: String,
     default: 'white',
+  },
+  image: {
+    type: String,
+  },
+  user_id: {
+    type: Schema.Types.ObjectId,
+    ref: 'UserModel',
+    require: true,
+  },
+  syndicate: {
+    type: [String],
+    default: [],
+  },
+  board_id: {
+    type: Schema.Types.ObjectId,
+    ref: 'GameBoardModel',
   },
 },
 { timestamps: true },

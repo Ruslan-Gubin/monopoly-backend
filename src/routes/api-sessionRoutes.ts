@@ -1,12 +1,12 @@
 import expressWs from 'express-ws';
 import express from 'express';
 import WebSocket from 'ws';
-import { handleValidationErrors, handleWebSocketMessage, logger } from "../utils/index.js";
+import { handleValidationErrors, handleWebSocketMessage } from "../utils/index.js";
+import { sessionHandlers } from '../handlers/index.js';
 
 expressWs(express());
 const router =  express.Router() as expressWs.Router;
 
-import { sessionHandlers } from '../handlers/index.js';
 
 router.use(handleValidationErrors)
 router.ws('/api/ws-session', (ws: WebSocket) => {

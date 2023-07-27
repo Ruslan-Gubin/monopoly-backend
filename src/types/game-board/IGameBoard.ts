@@ -1,4 +1,4 @@
-import {  Document, IBank, ICell, IActionCard, IDice, IPlayer } from '../index.js';
+import {  Document, ICell, IActionCard, IDice, IPlayer, } from '../index.js';
 
 /**
  * Интерфейс Игровой доски.
@@ -12,11 +12,6 @@ export interface IGameBoard extends Document {
    */
   board_name: string;
   /**
-   * Mассив игровых клеток
-   * @type { [ICell] }
-   */
-  cells: ICell[];
-  /**
    * Mассив участников игры
    * @type { [IPlayer] }
    */
@@ -27,33 +22,53 @@ export interface IGameBoard extends Document {
    */
   currentPlayerId: string;
   /**
-   * Идентификатор текущая активная клетка
+   * Позиция текущей клетки
    * @type { string }
    */
-  currentCellsId: string;
+  currentCellPosition: number;
   /**
-   * Mассив карт действий
+   * Mассив карт шанса
    * @type { [IActionCard] }
    */
-  action_cards: IActionCard[];
+  chanse_cards: IActionCard[];
+  /**
+   * Mассив карт лотореи
+   * @type { [IActionCard] }
+   */
+  lottery_cards: IActionCard[];
+  /**
+   * Текуший номер шанса
+   * @type { number }
+   */
+  chanse_current: number;
+  /**
+   * Текуший номер лотореи
+   * @type { number }
+   */
+  lottery_current: number;
   /**
    * Представляющий состояние игровых костей
    * @type { IDice }
    */
   dice: IDice;
   /**
-   * Количество доступных денег и другие ресурсы
-   * @type { IBank }
-   */
-  bank: IBank;
-  /**
-   * Список id доступных клеток для покупки
-   * @type { [string] }
-   */
-  available_cells: string[]
-  /**
    * Список id заложенных клеток
    * @type { [string] }
    */
   mortgaged_cells: string[]
+  /**
+   * Список id свободных собственностей
+   * @type { [CellModel] }
+   */
+  free_propertyes: ICell[]
+  /**
+   * Список id свободных собственностей
+   * @type { [strign] }
+   */
+  occupied_properties: string[]
+   /**
+   * Doc доски
+   * @type { IGameBoard }
+   */
+  _doc: IGameBoard
 }

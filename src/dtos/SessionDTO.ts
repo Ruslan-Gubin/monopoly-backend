@@ -68,6 +68,7 @@ export interface SessionConfirmParticipationDTO {
   body: {
     authId: string;
     sessionId: string;
+    color: string;
   };
 }
 

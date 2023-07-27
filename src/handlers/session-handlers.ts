@@ -11,7 +11,7 @@ export const authService = new services.AuthService({ cache: nodeCache })
 const sessionController = new controllers.SessionController(sessionService); 
 const messageController = new controllers.MessageController(messageService)
 const confirmationController = new controllers.ConfirmationController(new services.SessionConfirmationService({ sessionService, sessionId: SESSION_ID }))
-const authController = new controllers.AuthController(authService)
+export const authController = new controllers.AuthController(authService)
 
 
 export const sessionHandlers: HandlersType = { 

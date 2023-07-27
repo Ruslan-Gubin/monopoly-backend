@@ -2,8 +2,10 @@ export interface StartConfirmationDTO {
    sessionId: string 
 }
 export interface ConfirmGameDTO extends StartConfirmationDTO {
-  authId: string 
+  authId: string
+  color: string
 }
-export interface CancelParticipationGameDTO extends ConfirmGameDTO {
+export interface CancelParticipationGameDTO extends StartConfirmationDTO {
   authName: string 
+  authId: string
 }

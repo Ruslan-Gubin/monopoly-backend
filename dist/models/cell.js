@@ -49,4 +49,4 @@ const CellSchema = new Schema({
         },
     },
 });
-export const CelldModel = model('Cell', CellSchema);
+export const CellModel = model('Cell', CellSchema);

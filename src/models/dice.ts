@@ -2,7 +2,7 @@ import { Schema,  model } from 'mongoose';
 import { IDice } from '../types/index.js';
 
 const DiceSchema: Schema<IDice> = new Schema({
-  player_id: {
+  current_id: {
     type: String,
   },
   dice1: {
@@ -18,9 +18,6 @@ const DiceSchema: Schema<IDice> = new Schema({
     type: Number,
   },
   prev_player: {
-    type: String,
-  },
-  board_id: {
     type: String,
   },
   isDouble: {

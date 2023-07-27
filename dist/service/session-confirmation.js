@@ -31,14 +31,17 @@ export class SessionConfirmationService {
     }
     async confirmGame(ws, body) {
         try {
-            const { authId, sessionId } = body;
-            if (!authId || !sessionId) {
+            const { authId, sessionId, color } = body;
+            if (!authId || !sessionId || !color) {
                 throw new Error('Failed to auhtId or sessionId not found');
             }
             const broadData = {
                 method: 'confirmParticipationGame',
-                player: authId,
-                sessionId: sessionId,
+                body: {
+                    playerId: authId,
+                    sessionId: sessionId,
+                    color,
+                }
             };
             broadcastConnection(this.id, ws, broadData);
         }

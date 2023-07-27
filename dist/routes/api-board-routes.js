@@ -1,0 +1,20 @@
+import expressWs from 'express-ws';
+import express from 'express';
+import { handleValidationErrors, nodeCache } from "../utils/index.js";
+import { DiceController, GameBoardController } from '../controllers/index.js';
+import { GameBoardService, PlayerService, DiceService } from '../service/index.js';
+import { PlayerController } from '../controllers/api-player-controllers.js';
+expressWs(express());
+const router = express.Router();
+const gameBoardService = new GameBoardService({ cache: nodeCache });
+const gameBoardController = new GameBoardController(gameBoardService);
+export const playerService = new PlayerService({ cache: nodeCache });
+export const playerController = new PlayerController(playerService);
+export const diceService = new DiceService({ cache: nodeCache });
+export const diceController = new DiceController(diceService);
+router.use(handleValidationErrors);
+router.get('/api/get-board/:id', gameBoardController.getBoardId);
+router.post("/api/create-board", gameBoardController.createBoard);
+router.ws('/api/ws-board', (ws) => {
+});
+export const gameBoardRouter = router;

@@ -1,4 +1,4 @@
-export function handleWebSocketMessage(ws, handlers, msg) {
+export function handleWebSocket(ws, handlers, msg) {
     const message = JSON.parse(msg);
     const method = message.method;
     if (handlers[method]) {

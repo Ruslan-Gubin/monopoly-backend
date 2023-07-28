@@ -1,6 +1,6 @@
 import WebSocket from 'ws';
 
-export function handleWebSocketMessage(
+export function handleWebSocket(
   ws: WebSocket,
   handlers: { [key: string]: ((ws: WebSocket, message: any) => void | Promise<void>)[] },
   msg: string

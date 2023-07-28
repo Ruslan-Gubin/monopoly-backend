@@ -1,13 +1,12 @@
 import { Model } from 'mongoose';
 import { WebSocket } from 'ws';
 import { GameBoardModel } from '../models/index.js';
-import { CacheManager, broadcastConnection, logger, randomValue } from '../utils/index.js';
+import { CacheManager, broadcastConnection, logger, randomValue, getUnicNumber } from '../utils/index.js';
 import * as DTO from '../dtos/index.js';
 import * as types from '../types/index.js';
-import { cellService } from '../routes/api-cellRoutes.js';
-import { diceService, playerService } from '../routes/index.js';
 import { ExtendedWebSocket } from '../types/index.js';
 import { SESSION_ID } from '../config/web-socked.js';
+import { cellService, diceService, playerService } from '../handlers/index.js';
 
 
 export class GameBoardService {
@@ -61,7 +60,7 @@ export class GameBoardService {
         method: 'createGameBoard',
         title: `Игроки ${playersNameList} перемещаются на игровое поле`,
         board_id: newBoard._id,
-        user_id: newPlayers.map(player => player.user_id)
+        user_id: newPlayers.map(player => player.user_id) 
       };
     
       broadcastConnection(SESSION_ID, ws, broadData);
@@ -81,12 +80,11 @@ export class GameBoardService {
         let boardCache = this.cache.getValueInKey(boardId)
 
         if (!boardCache) {
-          boardCache = await this.model.find({_id: boardId})
+          boardCache = await this.model.findById(boardId)
+          if (!boardCache) {
+            throw new Error('Failed get board in service')
+          }
           this.cache.addKeyInCache(boardId, boardCache)
-        }
-
-        if (!boardCache) {
-          throw new Error('Failed get board in service')
         }
         
         return boardCache
@@ -103,32 +101,40 @@ export class GameBoardService {
     }
   }
 
-  // async connectedGameBoard(ws: types.ExtendedWebSocket, message: DTO.SessionConnectDTO) {
-  //   try {
-  //     ws.id = this.sessionId;
+  async connectBoard(ws: types.ExtendedWebSocket, message: DTO.ConnectBoardDTO) {
+    try {
+      const boardId = getUnicNumber(message.boardId)
+      ws.id = boardId
 
-  //     const sessions = await this.getAllSessions();
+      const board = await this.getBoardId(message.boardId) as types.IGameBoard
+      const cells = await cellService.getAllCells('nep')
+      const players = await playerService.getBoardPlayers(message.boardId)
+      if (!board || !cells || !players) {
+        throw new Error('Failed to board get data'); 
+      }
+      const dice = await diceService.getDiceInBoard(board.dice.toString())
 
-  //     if (!sessions) {
-  //       throw new Error('Failed to get all sessions');
-  //     }
+      ws.send(JSON.stringify({ 
+        method: 'connectData', 
+        data: {
+          board,
+          cells,
+          players,
+          dice,
+        } 
+      }));
 
-  //     ws.send(JSON.stringify({ method: 'connectData', data: sessions }));
-
-  //     const selectionMessages = await this.messageService.getMessages();
-
-  //     const broadData = {
-  //       method: 'connectedUser',
-  //       title: `Пользователь ${message.fullName} подключен`,
-  //       messages: selectionMessages,
-  //     };
-
-  //     broadcastConnection(this.sessionId, ws, broadData);
-  //   } catch (error) {
-  //     logger.error('Failed to connection session:', error);
-  //     return { error, text: 'Failed to connection sessio' };
-  //   }
-  // }
+      const broadData = {
+        method: message.method,
+        title: `Пользователь ${message.fullName} подключен`,
+      };
+      
+      broadcastConnection(boardId, ws, broadData);
+    } catch (error) {
+      logger.error('Failed to connection session:', error);
+      return { error, text: 'Failed to connection sessio' };
+    }
+  }
 
   // async disconectUser(ws: WebSocket, body: DTO.SessionDisconectBodyDTO) {
   //   try {

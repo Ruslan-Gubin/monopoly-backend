@@ -1,7 +1,7 @@
 import { GameBoardModel } from '../models/index.js';
-import { broadcastConnection, logger, randomValue } from '../utils/index.js';
-import { diceService, playerService } from '../routes/index.js';
+import { broadcastConnection, logger, randomValue, getUnicNumber } from '../utils/index.js';
 import { SESSION_ID } from '../config/web-socked.js';
+import { cellService, diceService, playerService } from '../handlers/index.js';
 export class GameBoardService {
     constructor({ cache, }) {
         this.allGameBoardKey = 'allGameBoard';
@@ -54,11 +54,11 @@ export class GameBoardService {
             }
             let boardCache = this.cache.getValueInKey(boardId);
             if (!boardCache) {
-                boardCache = await this.model.find({ _id: boardId });
+                boardCache = await this.model.findById(boardId);
+                if (!boardCache) {
+                    throw new Error('Failed get board in service');
+                }
                 this.cache.addKeyInCache(boardId, boardCache);
-            }
-            if (!boardCache) {
-                throw new Error('Failed get board in service');
             }
             return boardCache;
         }
@@ -71,6 +71,37 @@ export class GameBoardService {
         const allEntity = await this.model.find({});
         for (const board of allEntity) {
             await this.model.findByIdAndDelete(board._id);
+        }
+    }
+    async connectBoard(ws, message) {
+        try {
+            const boardId = getUnicNumber(message.boardId);
+            ws.id = boardId;
+            const board = await this.getBoardId(message.boardId);
+            const cells = await cellService.getAllCells('nep');
+            const players = await playerService.getBoardPlayers(message.boardId);
+            if (!board || !cells || !players) {
+                throw new Error('Failed to board get data');
+            }
+            const dice = await diceService.getDiceInBoard(board.dice.toString());
+            ws.send(JSON.stringify({
+                method: 'connectData',
+                data: {
+                    board,
+                    cells,
+                    players,
+                    dice,
+                }
+            }));
+            const broadData = {
+                method: message.method,
+                title: `Пользователь ${message.fullName} подключен`,
+            };
+            broadcastConnection(boardId, ws, broadData);
+        }
+        catch (error) {
+            logger.error('Failed to connection session:', error);
+            return { error, text: 'Failed to connection sessio' };
         }
     }
     getGameBoardsCache() {

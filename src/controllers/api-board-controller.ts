@@ -9,49 +9,49 @@ import { Response } from 'express-serve-static-core';
 export class GameBoardController {
   constructor(private gameBoardService: GameBoardService) {}
 
-  // /** Получаем событие с клиента */
-  // handleMessage = (ws: WebSocket, message: any) => {
-  //   const method = message?.method
+  /** Получаем событие с клиента */
+  handleMessage = (ws: WebSocket, message: any) => {
+    const method = message?.method
 
-  //   try {
-  //     switch(method) {
-  //       case 'connection':
-  //         this.connectWS(ws, message)
-  //       break;
-  //       case 'createSession':
-  //         this.createSession(ws, message)
-  //       break;
-  //       case 'removeSession':
-  //         this.removeSession(ws, message)
-  //       break;
-  //       case 'joinSession':
-  //         this.joinSession(ws, message)
-  //       break;
-  //       case 'outSession':
-  //         this.outSession(ws, message)
-  //       break;
-  //       case 'disconect':
-  //         this.disconect(ws, message)
-  //       break;
-  //       default:
-  //         throw new Error('Invalid method');
-  //     }
-  //   } catch (error) {
-  //     logger.error('Failed to handle WebSocket message:', error);
-  //     ws.send(JSON.stringify({ error: 'Failed to handle WebSocket message' }));
-  //   }
-  // };
+    try {
+      switch(method) {
+        case 'connection':
+          this.connectWS(ws, message)
+        break;
+        // case 'createSession':
+        //   this.createSession(ws, message)
+        // break;
+        // case 'removeSession':
+        //   this.removeSession(ws, message)
+        // break;
+        // case 'joinSession':
+        //   this.joinSession(ws, message)
+        // break;
+        // case 'outSession':
+        //   this.outSession(ws, message)
+        // break;
+        // case 'disconect':
+        //   this.disconect(ws, message)
+        // break;
+        default:
+          throw new Error('Invalid method');
+      }
+    } catch (error) {
+      logger.error('Failed to handle WebSocket message:', error);
+      ws.send(JSON.stringify({ error: 'Failed to handle WebSocket message' }));
+    }
+  };
 
 
-  // /** Подключение пользователя к сокету */
-  // private connectWS = async (ws: ExtendedWebSocket | WebSocket, message: DTO.SessionConnectDTO) => {
-  //   try {
-  //     await this.sessionService.connectedSession((ws as ExtendedWebSocket), message);
-  //   } catch (error) {
-  //     logger.error('Failed to connect WebSocket:', error);
-  //     ws.send(JSON.stringify({ error: 'Failed to connect WebSocket' }));
-  //   }
-  // };
+  /** Подключение пользователя к сокету */
+  private connectWS = async (ws: ExtendedWebSocket | WebSocket, message: DTO.ConnectBoardDTO) => {
+    try {
+      await this.gameBoardService.connectBoard((ws as ExtendedWebSocket), message);
+    } catch (error) {
+      logger.error('Failed to connect WebSocket:', error);
+      ws.send(JSON.stringify({ error: 'Failed to connect WebSocket' }));
+    }
+  };
 
   /** Создание игровой доски */
   public createBoard = async (req: IRequestBody<DTO.BoardCreateDTO[]>, res: Response): Promise<void> => {

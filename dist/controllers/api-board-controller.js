@@ -2,6 +2,31 @@ import { logger } from '../utils/loger.js';
 export class GameBoardController {
     constructor(gameBoardService) {
         this.gameBoardService = gameBoardService;
+        this.handleMessage = (ws, message) => {
+            const method = message === null || message === void 0 ? void 0 : message.method;
+            try {
+                switch (method) {
+                    case 'connection':
+                        this.connectWS(ws, message);
+                        break;
+                    default:
+                        throw new Error('Invalid method');
+                }
+            }
+            catch (error) {
+                logger.error('Failed to handle WebSocket message:', error);
+                ws.send(JSON.stringify({ error: 'Failed to handle WebSocket message' }));
+            }
+        };
+        this.connectWS = async (ws, message) => {
+            try {
+                await this.gameBoardService.connectBoard(ws, message);
+            }
+            catch (error) {
+                logger.error('Failed to connect WebSocket:', error);
+                ws.send(JSON.stringify({ error: 'Failed to connect WebSocket' }));
+            }
+        };
         this.createBoard = async (req, res) => {
             try {
                 const body = req.body;

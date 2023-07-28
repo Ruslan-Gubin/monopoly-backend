@@ -1,0 +1,10 @@
+import { GameBoardController, PlayerController, DiceController } from '../controllers/index.js';
+import { GameBoardService, PlayerService, DiceService } from '../service/index.js';
+import { nodeCache } from '../utils/index.js';
+export const gameBoardService = new GameBoardService({ cache: nodeCache });
+export const playerService = new PlayerService({ cache: nodeCache });
+export const diceService = new DiceService({ cache: nodeCache });
+export const gameBoardController = new GameBoardController(gameBoardService);
+export const playerController = new PlayerController(playerService);
+export const diceController = new DiceController(diceService);
+export const sessionHandlers = {};

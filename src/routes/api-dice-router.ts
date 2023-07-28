@@ -1,5 +1,5 @@
 import * as express from 'express';
-import { diceController } from './api-board-routes.js';
+import { diceController } from '../handlers/index.js';
 
 const router: express.Router =  express.Router(); 
 

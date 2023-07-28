@@ -9,3 +9,4 @@ export * from './CacheManager.js';
 export * from './loger.js';
 export * from './WebSocketUtils.js';
 export * from './broadcastConnection.js';
+export * from './getUnicNumber.js';

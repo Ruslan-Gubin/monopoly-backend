@@ -42,6 +42,11 @@ export interface IPlayer extends Document {
    * @type {boolean}
    */
   in_jail: boolean; 
+  /**
+   * Количество ходов для освобождения.
+   * @type {number}
+   */
+  current_jail: number; 
    /**
    * Количество карточек "Выход из тюрьмы".
    * @type {number}

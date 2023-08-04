@@ -4,9 +4,9 @@ export class PlayerController {
         this.playerService = playerService;
         this.getBoardPlayers = async (req, res) => {
             try {
-                const boardId = req.params.id;
-                const players = await this.playerService.getBoardPlayers(boardId);
-                res.status(201).json(players);
+                const players = req.query.players;
+                const playersBoard = await this.playerService.getBoardPlayers(players);
+                res.status(201).json(playersBoard);
             }
             catch (error) {
                 logger.error('Failed to create user:', error);

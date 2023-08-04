@@ -4,13 +4,12 @@ const PropertySchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'CellModel',
     },
-    owner: {
+    board_id: {
         type: Schema.Types.ObjectId,
-        ref: 'PlayerModel',
+        ref: 'CellModel',
     },
-    price: {
-        type: Number,
-        required: true,
+    owner: {
+        type: String,
     },
     current_rent: {
         type: Number,
@@ -26,16 +25,24 @@ const PropertySchema = new Schema({
     },
     house_count: {
         type: Number,
-        required: true,
         default: 0,
-    },
-    rent: {
-        type: [Number],
-        required: true,
     },
     is_sindicate: {
         type: Boolean,
         default: false,
+    },
+    is_mortgage: {
+        type: Boolean,
+        default: false,
+    },
+    position: {
+        type: Number,
+    },
+    port_count: {
+        type: Number,
+    },
+    utiletes_count: {
+        type: Number,
     },
 }, { timestamps: true });
 export const PropertyModel = model('Property', PropertySchema);

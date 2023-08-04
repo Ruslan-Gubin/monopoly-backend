@@ -1,4 +1,4 @@
-import {  Document, ICell, IActionCard, IDice, IPlayer, } from '../index.js';
+import {  Document, ICell, IActionCard, IDice, IPlayer, IProperty, } from '../index.js';
 
 /**
  * Интерфейс Игровой доски.
@@ -18,14 +18,19 @@ export interface IGameBoard extends Document {
   players: IPlayer[];
   /**
    * Идентификатор текущего активного игрока
-   * @type { string }
+   * @type { IPlayer }
    */
-  currentPlayerId: string;
+  currentPlayerId: IPlayer;
   /**
    * Позиция текущей клетки
-   * @type { string }
+   * @type { number }
    */
   currentCellPosition: number;
+  /**
+   * ID текущей клетки
+   * @type { string }
+   */
+  currentCellId: string;
   /**
    * Mассив карт шанса
    * @type { [IActionCard] }
@@ -53,19 +58,59 @@ export interface IGameBoard extends Document {
   dice: IDice;
   /**
    * Список id заложенных клеток
-   * @type { [string] }
+   * @type { [IProperty] }
    */
-  mortgaged_cells: string[]
+  mortgaged_cells: IProperty[]
   /**
    * Список id свободных собственностей
-   * @type { [CellModel] }
+   * @type { [IProperty] }
    */
-  free_propertyes: ICell[]
+  free_propertyes: IProperty[]
   /**
-   * Список id свободных собственностей
-   * @type { [strign] }
+   * Список id занятых собственностей
+   * @type { [IProperty] }
    */
-  occupied_properties: string[]
+  occupied_properties: IProperty[]
+  /**
+   * Доступно для покупки
+   * @type { boolean }
+   */
+  available_purchase: boolean
+  /**
+   * Нужна аренда плата
+   * @type { number }
+   */
+  need_rent: number;
+  /**
+   * Стадия выбор действия
+   * @type { boolean }
+   */
+  choosing_action: boolean;
+  /**
+   * Стадия начала хода
+   * @type { boolean }
+   */
+  start_move: boolean;
+  /**
+   * Собственность текущего игрока
+   * @type { boolean }
+   */
+  property_current_player: boolean;
+  /**
+   * Текущее доступное действие игрока
+   * @type { string }
+   */
+  action: string;
+  /**
+   * Текущее оплата
+   * @type { number }
+   */
+  price: number;
+  /**
+   * ID для вебсокета
+   * @type { number }
+   */
+  ws_id: number;
    /**
    * Doc доски
    * @type { IGameBoard }

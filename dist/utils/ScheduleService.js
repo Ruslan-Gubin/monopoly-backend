@@ -1,5 +1,5 @@
 import schedule from 'node-schedule';
-function jobFunction() {
+export function jobFunction() {
     console.log('Выполняю задачу по расписанию!');
 }
 const scheduleRule = new schedule.RecurrenceRule();

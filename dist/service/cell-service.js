@@ -45,4 +45,20 @@ export class CellService {
             return { error, text: 'Failed to get all cells in service' };
         }
     }
+    async getCell(id) {
+        try {
+            if (!id) {
+                throw new Error('Failed to  position  in get getCell');
+            }
+            let cellCache = this.cache.getValueInKey(id);
+            if (!cellCache) {
+                cellCache = await this.model.findById(id);
+                this.cache.addKeyInCache(id, cellCache);
+            }
+            return cellCache;
+        }
+        catch (error) {
+            logger.error('Failed to get cell in service:', error);
+        }
+    }
 }

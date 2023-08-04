@@ -3,5 +3,5 @@ import { playerController } from '../handlers/index.js';
 
 
 const router: express.Router =  express.Router(); 
-router.get("/api/players-board/:id",  playerController.getBoardPlayers); 
+router.get("/api/players-board",  playerController.getBoardPlayers); 
 export const playerRouter = router;

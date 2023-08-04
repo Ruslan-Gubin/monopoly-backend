@@ -6,3 +6,4 @@ export * from './cell-service.js';
 export * from './board-service.js';
 export * from './player-service.js';
 export * from './dice-service.js';
+export * from './property-service.js';

@@ -1,4 +1,4 @@
-import { Model, UpdateWriteOpResult } from 'mongoose';
+import { Model } from 'mongoose';
 import * as types from '../types/index.js';
 import { CellModel } from '../models/index.js';
 import * as DTO from '../dtos/index.js';
@@ -59,5 +59,23 @@ export class CellService {
     }
   }
 
+  async getCell(id: string) {
+    try {
+      if (!id) {
+        throw new Error('Failed to  position  in get getCell');
+      }
+
+      let cellCache = this.cache.getValueInKey(id) as types.ICell
+      
+      if (!cellCache) {
+        cellCache = await this.model.findById(id) as types.ICell
+        this.cache.addKeyInCache(id, cellCache)
+      }
+
+      return cellCache;
+    } catch (error) {
+      logger.error('Failed to get cell in service:', error);
+    }
+  }
  
 }

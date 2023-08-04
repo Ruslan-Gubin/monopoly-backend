@@ -15,5 +15,5 @@ router.post("/api/create-board", gameBoardController.createBoard);
 router.ws('/api/ws-board', (ws: WebSocket) => {
   ws.on('message', (msg: string) => handleWebSocket(ws, boardHandlers, msg));
 });
-
+ 
 export const gameBoardRouter = router;

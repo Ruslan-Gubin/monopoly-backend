@@ -17,6 +17,7 @@ const DiceSchema = new Schema({
     },
     prev_player: {
         type: String,
+        default: null,
     },
     isDouble: {
         type: Boolean,

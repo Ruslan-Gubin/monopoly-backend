@@ -8,19 +8,24 @@ const GameBoardSchema: Schema<IGameBoard> = new Schema({
     default: 'nep'
   },
   currentPlayerId: { //Текущая очередь игрока
-    type: String,
+    type: Schema.Types.ObjectId,
+    ref: 'PlayerModel',
     required: true,
   },
-  currentCellPosition: { //Текущая позиция  игрока
+  currentCellPosition: { //Текущая позиция  игрока todo Delete
     type: Number,
     default: 0,
   },
-  chanse_cards: {  
+  currentCellId: { 
+    type: String,
+    default: null,
+  },
+  chanse_cards: { //todo Delete 
     type: [Schema.Types.ObjectId], 
     ref: 'ActionCardModel',
     default: [],
   },
-  lottery_cards: {  
+  lottery_cards: {  //todo Delete
     type: [Schema.Types.ObjectId], 
     ref: 'ActionCardModel',
     default: [],
@@ -42,21 +47,55 @@ const GameBoardSchema: Schema<IGameBoard> = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'DiceModel',
   },
-  free_propertyes: {
+  free_propertyes: { //todo Delete
     type: [Schema.Types.ObjectId],
-    ref: 'CellModel',
+    ref: 'PropertyModel',
   },
-  mortgaged_cells: {
-    type: [String],
-    require: true,
+  mortgaged_cells: { //todo Delete
+    type: [Schema.Types.ObjectId],
+    ref: 'PropertyModel',
     default: [],
   },
-  occupied_properties: {
-    type: [String],
+  occupied_properties: { //todo Delete
+    type: [Schema.Types.ObjectId],
+    ref: 'PropertyModel',
     default: [],
+  },
+  available_purchase: { // доступно для покупки
+    type: Boolean,
+    default: false,
+  },
+  need_rent: { 
+    type: Number,
+    default: 0,
+  },
+  choosing_action: { 
+    type: Boolean,
+    default: false,
+  },
+  start_move: { 
+    type: Boolean,
+    default: true,
+  },
+  property_current_player: { 
+    type: Boolean,
+    default: false,
+  },
+  action: { 
+    type: String,
+    default: 'trow dice',
+  },
+  price: { 
+    type: Number,
+    default: 0,
+  },
+  ws_id: { 
+    type: Number,
   },
 },
-{ timestamps: true },
+{ 
+  timestamps: true,
+},
 );
 
 export const GameBoardModel = model<IGameBoard>('GameBoard', GameBoardSchema);

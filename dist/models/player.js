@@ -34,6 +34,10 @@ const PlayerSchema = new Schema({
         required: true,
         default: false,
     },
+    current_jail: {
+        type: Number,
+        default: 3,
+    },
     getOutOfJailCards: {
         type: Number,
         required: true,

@@ -1,4 +1,4 @@
-import {  Document } from './index.js';
+import { Document } from './index.js';
 
 export interface SessionPlayer {
   id: string;

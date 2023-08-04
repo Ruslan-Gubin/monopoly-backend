@@ -6,12 +6,17 @@ const GameBoardSchema = new Schema({
         default: 'nep'
     },
     currentPlayerId: {
-        type: String,
+        type: Schema.Types.ObjectId,
+        ref: 'PlayerModel',
         required: true,
     },
     currentCellPosition: {
         type: Number,
         default: 0,
+    },
+    currentCellId: {
+        type: String,
+        default: null,
     },
     chanse_cards: {
         type: [Schema.Types.ObjectId],
@@ -42,16 +47,50 @@ const GameBoardSchema = new Schema({
     },
     free_propertyes: {
         type: [Schema.Types.ObjectId],
-        ref: 'CellModel',
+        ref: 'PropertyModel',
     },
     mortgaged_cells: {
-        type: [String],
-        require: true,
+        type: [Schema.Types.ObjectId],
+        ref: 'PropertyModel',
         default: [],
     },
     occupied_properties: {
-        type: [String],
+        type: [Schema.Types.ObjectId],
+        ref: 'PropertyModel',
         default: [],
     },
-}, { timestamps: true });
+    available_purchase: {
+        type: Boolean,
+        default: false,
+    },
+    need_rent: {
+        type: Number,
+        default: 0,
+    },
+    choosing_action: {
+        type: Boolean,
+        default: false,
+    },
+    start_move: {
+        type: Boolean,
+        default: true,
+    },
+    property_current_player: {
+        type: Boolean,
+        default: false,
+    },
+    action: {
+        type: String,
+        default: 'trow dice',
+    },
+    price: {
+        type: Number,
+        default: 0,
+    },
+    ws_id: {
+        type: Number,
+    },
+}, {
+    timestamps: true,
+});
 export const GameBoardModel = model('GameBoard', GameBoardSchema);

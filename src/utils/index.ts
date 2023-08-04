@@ -10,3 +10,6 @@ export * from './loger.js';
 export * from './WebSocketUtils.js';
 export * from './broadcastConnection.js';
 export * from './getUnicNumber.js';
+export * from './checkCellType.js';
+export * from './chanceCard.js';
+export * from './sindicateList.js';

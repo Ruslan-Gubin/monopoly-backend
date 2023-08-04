@@ -18,21 +18,18 @@ export class GameBoardController {
         case 'connection':
           this.connectWS(ws, message)
         break;
-        // case 'createSession':
-        //   this.createSession(ws, message)
-        // break;
-        // case 'removeSession':
-        //   this.removeSession(ws, message)
-        // break;
-        // case 'joinSession':
-        //   this.joinSession(ws, message)
-        // break;
-        // case 'outSession':
-        //   this.outSession(ws, message)
-        // break;
-        // case 'disconect':
-        //   this.disconect(ws, message)
-        // break;
+        case 'disconect':
+          this.disconect(ws, message)
+        break;
+        case 'finishedMove':
+          this.finishedMove(ws, message)
+        break;     
+        case 'buyProperty':
+          this.buyProperty(ws, message)
+        break;     
+        case 'pay':
+          this.payPrice(ws, message)
+        break;     
         default:
           throw new Error('Invalid method');
       }
@@ -78,44 +75,44 @@ export class GameBoardController {
     }
   };
 
-  // /** Удаление сессии */
-  // private removeSession = async (ws: WebSocket, message: DTO.SessionRemoveDTO): Promise<void> => {
-  //   try {
-  //     await  this.sessionService.removeSession(ws, message);
-  //   } catch (error) {
-  //     logger.error('Failed to remove session:', error);
-  //     ws.send(JSON.stringify({ error: 'Failed to remove session' }));
-  //   }
-  // };
+    /** Игрок завершил движение по доске */
+    finishedMove = async (ws: WebSocket, message: DTO.BoardFinishedMoveDTO): Promise<void> => {
+      try {
+        await this.gameBoardService.finishedMove(ws, message);
+      } catch (error) {
+        logger.error('Failed to update players finished move:', error);
+        ws.send(JSON.stringify({ error: 'Failed to update players finished move:' }));
+      }
+    };
 
-  // /** Присоеденится к сессии */
-  // private joinSession = async (ws: WebSocket, message: DTO.SessionJoinDTO): Promise<void> => {
-  //   try {
-  //     await  this.sessionService.joinSession(ws, message.body);
-  //   } catch (error) {
-  //     logger.error('Failed to join session:', error);
-  //     ws.send(JSON.stringify({ error: 'Failed to join session' }));
-  //   }
-  // };
+  /** Пользователь отключается от вэбсокета */
+  private disconect = async (ws: WebSocket, message: DTO.SessionDisconectUserDTO): Promise<void> => {
+    try {
+    await  this.gameBoardService.disconectUser(ws, message.body);
+    } catch (error) {
+      logger.error('Failed to disconnect WebSocket:', error);
+      ws.send(JSON.stringify({ error: 'Failed to disconnect WebSocket' }));
+    }
+  };
 
-  // /** Выход из сессии */
-  // private outSession = async (ws: WebSocket, message: DTO.SessionOutDTO): Promise<void> => {
-  //   try { 
-  //     await  this.sessionService.outSession(ws, message.body);
-  //   } catch (error) {
-  //     logger.error('Failed to leave session:', error);
-  //     ws.send(JSON.stringify({ error: 'Failed to leave session' }));
-  //   }
-  // };
+  /** Пользователь покупает собственность*/
+  private buyProperty = async (ws: WebSocket, message: DTO.BoardBuyPropertyDTO): Promise<void> => {
+    try {
+    await  this.gameBoardService.buyProperty(ws, message);
+    } catch (error) {
+      logger.error('Failed to buy property:', error);
+      ws.send(JSON.stringify({ error: 'Failed to buy property' }));
+    }
+  };
 
-  // /** Пользователь отключается от вэбсокета */
-  // private disconect = async (ws: WebSocket, message: DTO.SessionDisconectUserDTO): Promise<void> => {
-  //   try {
-  //   await  this.sessionService.disconectUser(ws, message.body);
-  //   } catch (error) {
-  //     logger.error('Failed to disconnect WebSocket:', error);
-  //     ws.send(JSON.stringify({ error: 'Failed to disconnect WebSocket' }));
-  //   }
-  // };
+  /** Пользователь оплачивает нужную сумму */
+  private payPrice = async (ws: WebSocket, message: DTO.BoardPayTaxDTO): Promise<void> => {
+    try {
+    await  this.gameBoardService.payPrice(ws, message);
+    } catch (error) {
+      logger.error('Failed to pay tax:', error);
+      ws.send(JSON.stringify({ error: 'Failed to pay tax' }));
+    }
+  };
 
 }

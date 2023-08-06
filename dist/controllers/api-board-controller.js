@@ -12,14 +12,11 @@ export class GameBoardController {
                     case 'disconect':
                         this.disconect(ws, message);
                         break;
-                    case 'finishedMove':
-                        this.finishedMove(ws, message);
-                        break;
-                    case 'buyProperty':
-                        this.buyProperty(ws, message);
-                        break;
                     case 'pay':
                         this.payPrice(ws, message);
+                        break;
+                    case 'playerGameOver':
+                        console.log(message);
                         break;
                     default:
                         throw new Error('Invalid method');
@@ -62,15 +59,6 @@ export class GameBoardController {
                 res.status(500).json({ error: 'Failed to create board', errorMessage: error });
             }
         };
-        this.finishedMove = async (ws, message) => {
-            try {
-                await this.gameBoardService.finishedMove(ws, message);
-            }
-            catch (error) {
-                logger.error('Failed to update players finished move:', error);
-                ws.send(JSON.stringify({ error: 'Failed to update players finished move:' }));
-            }
-        };
         this.disconect = async (ws, message) => {
             try {
                 await this.gameBoardService.disconectUser(ws, message.body);
@@ -78,15 +66,6 @@ export class GameBoardController {
             catch (error) {
                 logger.error('Failed to disconnect WebSocket:', error);
                 ws.send(JSON.stringify({ error: 'Failed to disconnect WebSocket' }));
-            }
-        };
-        this.buyProperty = async (ws, message) => {
-            try {
-                await this.gameBoardService.buyProperty(ws, message);
-            }
-            catch (error) {
-                logger.error('Failed to buy property:', error);
-                ws.send(JSON.stringify({ error: 'Failed to buy property' }));
             }
         };
         this.payPrice = async (ws, message) => {

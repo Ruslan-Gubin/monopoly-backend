@@ -1,4 +1,4 @@
-import { ICell } from "../types/index.js";
+import { ICell } from '../types/index.js';
 
 export interface BoardCreateDTO {
   id: string;
@@ -25,48 +25,76 @@ export interface BoardFinishedMoveDTO {
     newPosition: number;
     cell_id: string;
     players: string[];
-    lottery_current: number,
-    chanse_current: number,
-    property_id: string | null,
-    cell: ICell
+    lottery_current: number;
+    chanse_current: number;
+    property_id: string | null;
+    cell: ICell;
+    ws_id: number;
   };
 }
 
 /** Данные при покупке собственности */
 export interface BoardBuyPropertyDTO {
-  method: string
+  method: string;
   body: {
     /** ID игровой доски*/
-    board_id: string,
+    board_id: string;
     /** ID владельца */
-    player_id: string,
+    player_id: string;
     /** Ячейка */
-    cell: ICell,
+    cell: ICell;
     /** ID для веб сокета */
-    ws_id: number,
+    ws_id: number;
     /** Список игроков для определения очереди */
-    players: string[],
+    players: string[];
     /** был ли дубль */
-    isDouble: boolean,
-  }
+    isDouble: boolean;
+    /** Цвет владельца */
+    player_color: string;
+  };
 }
 
 /** Данные оплаты налога */
 export interface BoardPayTaxDTO {
-  method: string
+  method: string;
   body: {
     /** ID игровой доски*/
-    board_id: string,
+    board_id: string;
     /** ID текющего игрока */
-    player_id: string, 
+    player_id: string;
     /** Нужная сумма к уплате */
-    price: number, 
+    price: number;
     /** был ли дубль */
-    isDouble: boolean, 
+    isDouble: boolean;
     /** Список игроков */
-    players: string[], 
+    players: string[];
     /** Имя текущего игрока */
-    player_name: string, 
-  
-  }
+    player_name: string;
+    /** ID владельца собственности (кому пойдет оплата) */
+    propertyOwnerId: string | undefined;
+  };
+}
+export interface UpdateDiceDTO {
+  method: string;
+  body: {
+    dice_id: string;
+    board_id: string;
+    user_name: string;
+    in_jail: boolean;
+    player_id: string;
+    ws_id: number;
+    players: string[];
+  };
+}
+export interface UpdatePropertyDTO {
+  method: string;
+  body: {
+    ws_id: number;
+    property_id: string;
+    player_id: string;
+    price: number;
+    player_name: string;
+    cellName: string;
+    value: boolean
+  };
 }

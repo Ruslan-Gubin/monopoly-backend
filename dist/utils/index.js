@@ -13,3 +13,4 @@ export * from './getUnicNumber.js';
 export * from './checkCellType.js';
 export * from './chanceCard.js';
 export * from './sindicateList.js';
+export * from './nextPlayerQueue.js';

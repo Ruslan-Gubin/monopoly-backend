@@ -44,5 +44,9 @@ const PropertySchema = new Schema({
     utiletes_count: {
         type: Number,
     },
+    player_color: {
+        type: String,
+        require: true,
+    },
 }, { timestamps: true });
 export const PropertyModel = model('Property', PropertySchema);

@@ -17,11 +17,11 @@ const PropertySchema: Schema<IProperty> = new Schema({
     type: Number,
     required: true,
   },
-  mortgage_price: {
+  mortgage_price: { // TODO delete
     type: Number,
     required: true,
   },
-  buy_back: {
+  buy_back: { // TODO delete
     type: Number,
     required: true,
   },
@@ -45,6 +45,10 @@ const PropertySchema: Schema<IProperty> = new Schema({
   },
   utiletes_count: {
     type: Number,
+  },
+  player_color: {
+    type: String,
+    require: true,
   },
 },
 { timestamps: true },

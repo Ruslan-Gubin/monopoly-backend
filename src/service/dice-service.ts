@@ -1,11 +1,8 @@
-import WebSocket from 'ws';
 import { Model } from 'mongoose';
 import { DiceModel } from '../models/index.js';
-import { broadcastConnection, CacheManager, getUnicNumber, logger, randomValue } from '../utils/index.js';
+import {  CacheManager, logger, randomValue } from '../utils/index.js';
 import * as DTO from '../dtos/index.js';
 import * as types from '../types/index.js';
-import { IReturnErrorObj } from '../types/index.js';
-import { playerService } from '../handlers/index.js';
 
 
 export class DiceService {
@@ -33,38 +30,26 @@ export class DiceService {
     }
   }
 
-  public async diceUpdate(ws: WebSocket, message: DTO.UpdateDiceDTO): Promise<void | IReturnErrorObj> {
+  public async diceUpdate({ dice_id, user_name,  player_id }: DTO.DiceUpdateDTO): Promise<types.IDice | string> {
     try {
-      if (!message) {
+      if (!dice_id || !user_name || !player_id) {
         throw new Error('Failed message in dice update service')
       }
-      const { board_id, current_id, dice_id, user_name, in_jail, player_id } = message.body
   
-      const boardId = getUnicNumber(board_id)
-      // const dice1 = 1
-      // const dice2 = 0
-      const dice1 = randomValue(1, 6)
-      const dice2 = randomValue(1, 6)
-
-      let value = dice1 + dice2
-
-      if (in_jail) {
-        const player = await playerService.updateTheatre({ player_id, isDouble: dice1 === dice2 })
-        if (typeof player === 'string') {
-          throw new Error('Failed update jail count')
-        }
-        value = player.in_jail ? 0 : dice1 + dice2
-      }
+      const dice1 = 5 
+      const dice2 = 4
+      // const dice1 = randomValue(1, 6)
+      // const dice2 = randomValue(1, 6)
 
       const diceUpdate = await this.model.findByIdAndUpdate(
         dice_id,
         {
-          current_id,
+          current_id: player_id,
           dice1,
           dice2,
-          value,
-          // isDouble: true,
-          isDouble: dice1 === dice2,
+          value: dice1 + dice2,
+          isDouble: true,
+          // isDouble: dice1 === dice2,
           user_name,
         },
         { returnDocument: 'after' }
@@ -72,18 +57,10 @@ export class DiceService {
 
       this.cache.addKeyInCache(dice_id, diceUpdate)
 
-      const broadData = {
-        method: message.method,
-        title: `Игрок: ${user_name} выкидывает ${dice1} и ${dice2}`,
-        data: {
-          dice: diceUpdate
-        }
-      };
-
-      broadcastConnection(boardId, ws, broadData);
+      return diceUpdate;
     } catch (error) {
       logger.error('Failed to update dice in service:', error);
-      return { error, text: 'Failed to update dice in service' };
+      return 'Failed to update dice in service';
     }
   }
 

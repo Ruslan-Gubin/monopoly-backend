@@ -10,7 +10,7 @@ export const checkCellType = (type: string): string => {
     customs: 'corner',
     'visit theater': 'corner',
     start: 'corner',
-    theater: 'corner',
+    theatre: 'corner',
     'action-tax': 'tax',
   }
   return map[type]

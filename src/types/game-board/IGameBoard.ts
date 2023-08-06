@@ -1,4 +1,4 @@
-import {  Document, ICell, IActionCard, IDice, IPlayer, IProperty, } from '../index.js';
+import {  Document, IActionCard, IDice, IPlayer, IProperty, } from '../index.js';
 
 /**
  * Интерфейс Игровой доски.
@@ -25,7 +25,7 @@ export interface IGameBoard extends Document {
    * Позиция текущей клетки
    * @type { number }
    */
-  currentCellPosition: number;
+  currentCellPosition: number; // TODO delete
   /**
    * ID текущей клетки
    * @type { string }
@@ -35,12 +35,12 @@ export interface IGameBoard extends Document {
    * Mассив карт шанса
    * @type { [IActionCard] }
    */
-  chanse_cards: IActionCard[];
+  chanse_cards: IActionCard[];  // TODO delete
   /**
    * Mассив карт лотореи
    * @type { [IActionCard] }
    */
-  lottery_cards: IActionCard[];
+  lottery_cards: IActionCard[];  // TODO delete
   /**
    * Текуший номер шанса
    * @type { number }
@@ -55,47 +55,47 @@ export interface IGameBoard extends Document {
    * Представляющий состояние игровых костей
    * @type { IDice }
    */
-  dice: IDice;
+  dice: IDice; 
   /**
    * Список id заложенных клеток
    * @type { [IProperty] }
    */
-  mortgaged_cells: IProperty[]
+  mortgaged_cells: IProperty[]  // TODO delete
   /**
    * Список id свободных собственностей
    * @type { [IProperty] }
    */
-  free_propertyes: IProperty[]
+  free_propertyes: IProperty[]  // TODO delete
   /**
    * Список id занятых собственностей
    * @type { [IProperty] }
    */
-  occupied_properties: IProperty[]
+  occupied_properties: IProperty[]  // TODO delete
   /**
    * Доступно для покупки
    * @type { boolean }
    */
-  available_purchase: boolean
+  available_purchase: boolean  // TODO delete
   /**
    * Нужна аренда плата
    * @type { number }
    */
-  need_rent: number;
+  need_rent: number;  // TODO delete
   /**
    * Стадия выбор действия
    * @type { boolean }
    */
-  choosing_action: boolean;
+  choosing_action: boolean;  // TODO delete
   /**
    * Стадия начала хода
    * @type { boolean }
    */
-  start_move: boolean;
+  start_move: boolean;  // TODO delete
   /**
    * Собственность текущего игрока
    * @type { boolean }
    */
-  property_current_player: boolean;
+  property_current_player: boolean;  // TODO delete
   /**
    * Текущее доступное действие игрока
    * @type { string }

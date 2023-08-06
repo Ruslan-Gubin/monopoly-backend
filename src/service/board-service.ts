@@ -1,12 +1,11 @@
 import { Model } from 'mongoose';
 import { WebSocket } from 'ws';
 import { GameBoardModel } from '../models/index.js';
-import { CacheManager, broadcastConnection, logger, randomValue, getUnicNumber, checkCellType, chanceCards, lotteryCards } from '../utils/index.js';
+import { CacheManager, broadcastConnection, logger, randomValue, getUnicNumber, nextPlayerQueue } from '../utils/index.js';
 import * as DTO from '../dtos/index.js';
 import * as types from '../types/index.js';
 import { SESSION_ID } from '../config/web-socked.js';
 import { cellService, diceService, playerService, propertyService } from '../handlers/index.js';
-import { ICell } from '../types/index.js';
 
 
 export class GameBoardService {
@@ -104,13 +103,6 @@ export class GameBoardService {
       }
   }
 
-  async deleteAll() {
-    const allEntity = await this.model.find({})
-    for(const board of allEntity) {
-      await this.model.findByIdAndDelete(board._id)
-    }
-  }
-
   async connectBoard(ws: types.ExtendedWebSocket, message: DTO.ConnectBoardDTO) {
     try {
       const boardId = getUnicNumber(message.boardId)
@@ -148,278 +140,12 @@ export class GameBoardService {
     }
   }
 
-  async finishedMove(ws: WebSocket, message: DTO.BoardFinishedMoveDTO): Promise<void | types.IReturnErrorObj> {
-    try {
-      if (!message) {
-        throw new Error('Failed message in finished move')
-      }
-      const { board_id, isDouble, newPosition, player_id, player_money, player_name, previous_position, cell_id, players, property_id, cell } = message.body
-      const boardId = getUnicNumber(board_id)
-      
-     const player = await playerService.updatePosition({
-        player_id,
-        newPosition,
-        previous_position,
-      }) as types.IPlayer
-      
-      let board = await this.getBoardId(board_id) as types.IGameBoard
-
-      if (typeof player === 'string' || !cell || !board) {
-        throw new Error ('Failed get cell or playerUpdate in board')
-      }     
-
-      const cellType = checkCellType(cell.type) as 'property' | 'action' | 'corner' | 'tax'
-
-      switch (cellType) {
-        case 'property':
-          await this.moveFinishProperty(boardId, ws, message, cell, player)
-          break;
-        case 'action':
-          await this.moveFinishAction(boardId, ws, message, cell)
-          break;
-        case 'tax':
-          await this.moveFinishTax(boardId, ws, message, cell, player, newPosition, cell_id)
-          break;
-        case 'corner':
-          await this.moveFinishCorner(boardId, ws, message, cell, player)
-          break;
-      }
-      
-    } catch (error) {
-      logger.error('Failed to update  in finished move:', error);
-      return { error, text: 'Failed to  player in finished move' };
-    }
-  }
-
-  async moveFinishProperty(boardId: number, ws: WebSocket, message: DTO.BoardFinishedMoveDTO, cell: types.ICell, player: types.IPlayer) {
-    try {
-      const { property_id, cell, board_id, cell_id, isDouble, newPosition, player_id,  player_name, players, previous_position } = message.body
-    
-      /** 4 состояния. 1 некуплено. 2 другого игрока. 3 своя. 4 другого игрока заложено */
-
-      const checkProperty = await propertyService.checkProperty({ board_id, cell_id, player_id, cell }) as { myProperty: boolean; canBuy: boolean; rent: number; isMortgage: boolean }
-          if (typeof checkProperty === 'string') {
-            throw new Error(checkProperty)
-          }
-          
-      const { canBuy, myProperty, rent, isMortgage } = checkProperty
-
-      let currentPlayerId = player_id
-      let action = 'start move';
-      let price = 0;    
-
-      if (canBuy) {
-        action = 'can buy';
-        price = cell.price;
-      }
-
-      if (myProperty || isMortgage) {
-        currentPlayerId = this.nextPlayerQueue(players, player_id, isDouble)
-      }
-
-      if (!myProperty && rent > 0) {
-        action = 'need pay'
-        price = rent
-      }
-
-      const board = await this.model.findByIdAndUpdate(message.body.board_id, {
-        currentPlayerId, // Текущяя очередь игрока
-        action, // Текущее действие игрока
-        price, // Нужно к уплате
-        currentCellPosition: newPosition, // текущая позиция ячейки
-        currentCellId: cell_id, // ID текущей ячейки
-      }, { returnDocument: 'after' }) as types.IGameBoard
-  
-      this.cache.addKeyInCache(board_id, board)
- 
-      const broadData = {
-        method: message.method,
-        title: `Игрок ${player.name} останавливается на ${cell.name}`,
-        data: {
-          board,
-          player,
-        },
-      };
-  
-      broadcastConnection(boardId, ws, broadData);
-    } catch (error) {
-      logger.error('Failed to update finished move cell corner:', error);
-      return { error, text: 'Failed to update finished move cell corner' };
-    }
-  }
-
-  async buyProperty(ws: WebSocket, message: DTO.BoardBuyPropertyDTO) {
-    try {
-      if (!message) {
-        throw new Error('Failed to message or  buy property in service')
-      }
-      const { board_id, player_id, cell, ws_id, isDouble, players } = message.body
-
-      const property = await propertyService.create({ board_id, player_id, cell })
-       if (typeof property === 'string') {
-        throw new Error(property)
-      }     
-      const player = await playerService.moneyUpdate(player_id, cell.price, false)
-      if (typeof player === 'string') {
-        throw new Error(player)
-      }
-
-     const currentPlayerId = this.nextPlayerQueue(players, player_id, isDouble)
-
-      const board = await this.model.findByIdAndUpdate(board_id, {
-        currentPlayerId, // Текущяя очередь игрока
-        action: 'start move', // Текущее действие игрока
-        price: 0, // Нужно к уплате
-      }, { returnDocument: 'after' }) as types.IGameBoard
-  
-      this.cache.addKeyInCache(board_id, board)
-
-      const broadData = {
-        method: message.method,
-        title: `Игрок: ${player.name} покупает ${cell.name}`,
-        data: {
-          player,
-          property: property.property,
-          manyProperty: property.manyUpdates,
-          board,
-        },
-      };
-
-      broadcastConnection(ws_id, ws, broadData);
-      
-    } catch (error) {
-      logger.error('Failed to  buy property  in service:', error);
-      return { error, text: 'Failed to  buy property  in service' };
-    }
- }
-
-  async moveFinishCorner(boardId: number, ws: WebSocket, message: DTO.BoardFinishedMoveDTO, cell: types.ICell, player: types.IPlayer) {
-    try {
-      const { board_id, cell_id, isDouble, newPosition, player_id,  player_name, players, previous_position } = message.body
-
-      let title = `Игрок: ${player_name} останавливается на поле ${cell.name}`
-      let currentPlayer = player
-
-      if (cell.type === 'visit theater') {
-        currentPlayer = await playerService.positionTheatre({
-          player_id,
-          previous_position,
-        }) as types.IPlayer
-        title = `Игрок: ${player_name} перемещается на поле театр`
-      }
-       
-      const currentPlayerId = this.nextPlayerQueue(players, player_id, isDouble)
-
-      const board = await this.model.findByIdAndUpdate(message.body.board_id, {
-        currentPlayerId, // Текущяя очередь игрока
-        action: 'start move', // Текущее действие игрока
-        currentCellPosition: newPosition, // текущая позиция ячейки
-        currentCellId: cell_id, // ID текущей ячейки
-      }, { returnDocument: 'after' }) as types.IGameBoard
-  
-      this.cache.addKeyInCache(board_id, board)
- 
-      const broadData = {
-        method: message.method,
-        title,
-        data: {
-          board,
-          player: currentPlayer,
-        },
-      };
-  
-      broadcastConnection(boardId, ws, broadData);
-    } catch (error) {
-      logger.error('Failed to update finished move cell corner:', error);
-      return { error, text: 'Failed to update finished move cell corner' };
-    }
-  }
-
-  async moveFinishAction(boardId: number, ws: WebSocket, message: DTO.BoardFinishedMoveDTO, cell: types.ICell) {
-    try {
-      const { board_id, cell_id, isDouble, newPosition, player_id, player_money, player_name, players, previous_position, chanse_current, lottery_current } = message.body
-      let chanceCurrent = chanse_current
-      let lotteryCurrent = lottery_current
-      let actionCard = null;
-      
-      if (cell.type === 'action-chance') {
-        chanceCurrent = chanse_current >= 16 ? 1 : chanceCurrent + 1
-        actionCard = chanceCards.get(chanceCurrent)
-      } else {
-        lotteryCurrent = lottery_current >= 9 ? 1 : lotteryCurrent + 1
-        actionCard = lotteryCards.get(lotteryCurrent)
-      }
-
-      if (!actionCard) {
-        throw new Error('Failed to action card')
-      }
-
-      const price = !actionCard.increment ? actionCard.price : 0
-      const action = !actionCard.increment ? 'need pay' : 'start move'
-      const currentPlayerId = !actionCard.increment ? player_id : this.nextPlayerQueue(players, player_id, isDouble)
-
-      const board = await this.model.findByIdAndUpdate(message.body.board_id, {
-        currentPlayerId, // Текущяя очередь игрока
-        action, // Текущее действие игрока
-        currentCellPosition: newPosition, // текущая позиция ячейки
-        currentCellId: cell_id, // ID текущей ячейки
-        chanse_current: chanceCurrent,
-        lottery_current: lotteryCurrent,
-        price,
-      }, { returnDocument: 'after' }) as types.IGameBoard
-  
-      this.cache.addKeyInCache(board_id, board)
-
-      const player = await playerService.moneyUpdate(player_id, actionCard.price, actionCard.increment)
-  
-      const broadData = {
-        method: message.method,
-        title: actionCard.text,
-        data: {
-          board,
-          player,
-        },
-      };
-  
-      broadcastConnection(boardId, ws, broadData);
-    } catch (error) {
-      logger.error('Failed to update finished move cell action:', error);
-      return { error, text: 'Failed to update finished move cell action' };
-    }
-  }
-
-  async moveFinishTax(boardId: number, ws: WebSocket, message: DTO.BoardFinishedMoveDTO, cell: types.ICell, player: types.IPlayer, newPosition: number, cell_id: string) {
-    try {
-      const board = await this.model.findByIdAndUpdate(message.body.board_id, {
-        action: 'need pay', // Текущее действие игрока
-        price: cell.price, // Текущяя оплата
-        currentCellPosition: newPosition, // текущая позиция ячейки
-        currentCellId: cell_id, // ID текущей ячейки
-      }, { returnDocument: 'after' }) as types.IGameBoard
-  
-      this.cache.addKeyInCache(message.body.board_id, board)
-  
-      const broadData = {
-        method: message.method,
-        title: `Игроку: ${message.body.player_name} придется оплатить налог в размере ${cell.price}`,
-        data: {
-          board,
-          player,
-        },
-      };
-  
-      broadcastConnection(boardId, ws, broadData);
-    } catch (error) {
-      logger.error('Failed to update finished move cell tax:', error);
-      return { error, text: 'Failed to update finished move cell tax' };
-    }
-  }
-
   async payPrice(ws: WebSocket, message: DTO.BoardPayTaxDTO) {
     try {
-      const { board_id, player_id, price, isDouble, player_name, players } = message.body
+      const { board_id, player_id, price, isDouble, player_name, players, propertyOwnerId } = message.body
       const boardId = getUnicNumber(board_id)
-      const nexPlayerId = this.nextPlayerQueue(players, player_id, isDouble)
+      const nexPlayerId = nextPlayerQueue(players, player_id, isDouble)
+      let propertyOwner = null;
     
       const board = await this.model.findByIdAndUpdate(board_id, {
         currentPlayerId: nexPlayerId,
@@ -430,6 +156,10 @@ export class GameBoardService {
       this.cache.addKeyInCache(board_id, board)
   
       const player = await playerService.moneyUpdate(player_id, price, false)
+
+      if (propertyOwnerId) {
+       propertyOwner = await playerService.moneyUpdate(propertyOwnerId, price, true)
+      }
   
       const broadData = {
         method: message.method,
@@ -437,6 +167,7 @@ export class GameBoardService {
         data: {
           board,
           player,
+          propertyOwner,
         },
       };
   
@@ -447,14 +178,7 @@ export class GameBoardService {
     }
   }
 
-private  nextPlayerQueue(players: string[], player_id: string, isDouble: boolean): string {
-    const current = players.findIndex(player => player === player_id)
-    if (isDouble) {
-      return players[current]
-    }
-    return current + 1 >= players.length ? players[0] : players[current + 1]
-  }
-
+  
   async disconectUser(ws: WebSocket, body: DTO.SessionDisconectBodyDTO) {
     try { 
       // const broadData = {

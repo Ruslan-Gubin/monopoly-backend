@@ -5,15 +5,15 @@ export class PropertyService {
         this.model = PropertyModel;
         this.cache = cache;
     }
-    async create({ board_id, cell, player_id }) {
+    async create({ board_id, cell, player_id, player_color }) {
         try {
-            if (!board_id || !cell || !player_id) {
+            if (!board_id || !cell || !player_id || !player_color) {
                 throw new Error('Failed to props in create property service');
             }
             let property;
             let manyUpdates;
             if (cell.type === 'property') {
-                const propertys = await this.createProperty({ board_id, cell, player_id });
+                const propertys = await this.createProperty({ board_id, cell, player_id, player_color });
                 if (typeof propertys === 'string')
                     throw new Error(propertys);
                 const { manyUpdate, newProperty } = propertys;
@@ -21,7 +21,7 @@ export class PropertyService {
                 manyUpdates = manyUpdate;
             }
             if (cell.type === 'port') {
-                const propertys = await this.createPort({ board_id, cell, player_id });
+                const propertys = await this.createPort({ board_id, cell, player_id, player_color });
                 if (typeof propertys === 'string')
                     throw new Error(propertys);
                 const { manyUpdate, newProperty } = propertys;
@@ -29,7 +29,7 @@ export class PropertyService {
                 manyUpdates = manyUpdate;
             }
             if (cell.type.includes('utilities')) {
-                const propertys = await this.createUtilities({ board_id, cell, player_id });
+                const propertys = await this.createUtilities({ board_id, cell, player_id, player_color });
                 if (typeof propertys === 'string')
                     throw new Error(propertys);
                 const { manyUpdate, newProperty } = propertys;
@@ -46,7 +46,7 @@ export class PropertyService {
             return 'Failed to create property in service';
         }
     }
-    async createProperty({ board_id, cell, player_id }) {
+    async createProperty({ board_id, cell, player_id, player_color }) {
         try {
             if (!board_id || !cell || !player_id) {
                 throw new Error('Failed to props in create property service');
@@ -90,6 +90,7 @@ export class PropertyService {
                 position: cell.position,
                 current_rent: currentRent,
                 is_sindicate: sindicate,
+                player_color,
             });
             if (!newProperty)
                 throw new Error('Failed to create property');
@@ -102,7 +103,7 @@ export class PropertyService {
             return 'Failed to create property in service';
         }
     }
-    async createPort({ board_id, cell, player_id }) {
+    async createPort({ board_id, cell, player_id, player_color }) {
         try {
             if (!board_id || !cell || !player_id) {
                 throw new Error('Failed to props in create property service');
@@ -140,6 +141,7 @@ export class PropertyService {
                 position: cell.position,
                 current_rent: port_count - 1,
                 port_count,
+                player_color,
             });
             if (!newProperty)
                 throw new Error('Failed to create property');
@@ -152,7 +154,7 @@ export class PropertyService {
             return 'Failed to create property in service';
         }
     }
-    async createUtilities({ board_id, cell, player_id, }) {
+    async createUtilities({ board_id, cell, player_id, player_color }) {
         try {
             if (!board_id || !cell || !player_id) {
                 throw new Error('Failed to props in create property service');
@@ -190,6 +192,7 @@ export class PropertyService {
                 position: cell.position,
                 current_rent: utiletes_count - 1,
                 utiletes_count,
+                player_color,
             });
             if (!newProperty)
                 throw new Error('Failed to create property');
@@ -251,7 +254,42 @@ export class PropertyService {
             return 'Failed to get all propertys in service';
         }
     }
-    getPropertyCache(id) {
-        return this.cache.getValueInKey(id);
+    async updateProperty(property_id) {
+        try {
+            if (!property_id) {
+                throw new Error('Failed to props property id in update property');
+            }
+            const updateProperty = await this.model.findByIdAndUpdate(property_id, {
+                $inc: { current_rent: +1, house_count: +1 }
+            }, { returnDocument: 'after' });
+            if (!updateProperty) {
+                throw new Error('Failed update property');
+            }
+            this.cache.addKeyInCache(property_id, updateProperty);
+            return updateProperty;
+        }
+        catch (error) {
+            logger.error('Failed to update Position service:', error);
+            return 'Failed to update Position service';
+        }
+    }
+    async mortgageUpdateProperty(property_id, value) {
+        try {
+            if (!property_id) {
+                throw new Error('Failed to props property id in update property');
+            }
+            const updateProperty = await this.model.findByIdAndUpdate(property_id, {
+                is_mortgage: value,
+            }, { returnDocument: 'after' });
+            if (!updateProperty) {
+                throw new Error('Failed update property');
+            }
+            this.cache.addKeyInCache(property_id, updateProperty);
+            return updateProperty;
+        }
+        catch (error) {
+            logger.error('Failed to update Position service:', error);
+            return 'Failed to update Position service';
+        }
     }
 }

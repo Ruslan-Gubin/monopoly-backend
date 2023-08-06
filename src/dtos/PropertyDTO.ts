@@ -10,4 +10,5 @@ export interface PropertyCreateOwner {
   board_id: string;
   player_id: string;
   cell: ICell;
+  player_color: string;
 }

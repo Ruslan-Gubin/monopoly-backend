@@ -14,16 +14,16 @@ export class PropertyService {
     this.cache = cache;
   }
 
- public async create({ board_id, cell, player_id }: DTO.PropertyCreateOwner): Promise<{ property: types.IProperty, manyUpdates: types.IProperty[]}| string>  {
+ public async create({ board_id, cell, player_id, player_color }: DTO.PropertyCreateOwner): Promise<{ property: types.IProperty, manyUpdates: types.IProperty[]}| string>  {
     try {
-      if (!board_id || !cell || !player_id) {
+      if (!board_id || !cell || !player_id || !player_color) {
         throw new Error('Failed to props in create property service');
       }
       let property;
       let manyUpdates;
 
       if (cell.type === 'property') {
-      const propertys = await this.createProperty({ board_id, cell, player_id }) 
+      const propertys = await this.createProperty({ board_id, cell, player_id, player_color }) 
       if (typeof propertys === 'string') throw new Error(propertys)
       const { manyUpdate, newProperty } = propertys
       property = newProperty
@@ -31,7 +31,7 @@ export class PropertyService {
       } 
 
       if (cell.type === 'port') {
-      const propertys = await this.createPort({ board_id, cell, player_id })
+      const propertys = await this.createPort({ board_id, cell, player_id, player_color })
       if (typeof propertys === 'string') throw new Error(propertys)
       const { manyUpdate, newProperty } = propertys
       property = newProperty
@@ -39,7 +39,7 @@ export class PropertyService {
       }
 
       if (cell.type.includes('utilities')) {
-      const propertys = await this.createUtilities({ board_id, cell, player_id })
+      const propertys = await this.createUtilities({ board_id, cell, player_id, player_color })
       if (typeof propertys === 'string') throw new Error(propertys)
       const { manyUpdate, newProperty } = propertys
       property = newProperty
@@ -58,7 +58,7 @@ export class PropertyService {
     }
   }
 
-  async createProperty({ board_id, cell, player_id }: DTO.PropertyCreateOwner): Promise<{ newProperty: types.IProperty, manyUpdate: types.IProperty[] } | string> {
+  async createProperty({ board_id, cell, player_id, player_color }: DTO.PropertyCreateOwner): Promise<{ newProperty: types.IProperty, manyUpdate: types.IProperty[] } | string> {
     try {
       if (!board_id || !cell || !player_id) {
         throw new Error('Failed to props in create property service');
@@ -111,7 +111,8 @@ export class PropertyService {
           buy_back: cell.price,
           position: cell.position, 
           current_rent: currentRent, 
-          is_sindicate: sindicate, 
+          is_sindicate: sindicate,
+          player_color,
         });
 
         if (!newProperty)  throw new Error('Failed to create property');
@@ -126,7 +127,7 @@ export class PropertyService {
     }
   }
 
-  async createPort({ board_id, cell, player_id }: DTO.PropertyCreateOwner): Promise<{ newProperty: types.IProperty, manyUpdate: types.IProperty[]} | string> {
+  async createPort({ board_id, cell, player_id, player_color }: DTO.PropertyCreateOwner): Promise<{ newProperty: types.IProperty, manyUpdate: types.IProperty[]} | string> {
     try {
       if (!board_id || !cell || !player_id) {
         throw new Error('Failed to props in create property service');
@@ -175,6 +176,7 @@ export class PropertyService {
           position: cell.position,
           current_rent: port_count -1,
           port_count,
+          player_color,
         });
 
         if (!newProperty)  throw new Error('Failed to create property');
@@ -189,7 +191,7 @@ export class PropertyService {
     }
   }
 
-  async createUtilities({ board_id, cell, player_id, }: DTO.PropertyCreateOwner): Promise<{ newProperty: types.IProperty, manyUpdate: types.IProperty[]} | string> {
+  async createUtilities({ board_id, cell, player_id, player_color }: DTO.PropertyCreateOwner): Promise<{ newProperty: types.IProperty, manyUpdate: types.IProperty[]} | string> {
     try {
       if (!board_id || !cell || !player_id) {
         throw new Error('Failed to props in create property service');
@@ -237,7 +239,8 @@ export class PropertyService {
           buy_back: cell.price,
           position: cell.position,
           current_rent: utiletes_count -1,
-          utiletes_count, 
+          utiletes_count,
+          player_color,
         });
 
         if (!newProperty)  throw new Error('Failed to create property');
@@ -306,42 +309,54 @@ export class PropertyService {
     }
   }
 
-//   async updateProperty({ player_id, newPosition, previous_position }: DTO.PlayerUpdatePositionDTO): Promise<types.IPlayer | string> {
-//     try {
-//       const updatePlayer = await this.model.findByIdAndUpdate(player_id, {
-//         position: newPosition,
-//         previous_position
-//       },
-//       {returnDocument: 'after'} 
-//       )
+  async updateProperty(property_id: string): Promise<types.IProperty | string> {
+    try {
+      if (!property_id) {
+        throw new Error('Failed to props property id in update property')
+      }
 
-//       if (!updatePlayer) {
-//         throw new Error ('Failed get players update board')
-//       }
-//       const updatePlayerId = updatePlayer._id.toString()
-//       this.cache.addKeyInCache(updatePlayerId, updatePlayer)
+      const updateProperty = await this.model.findByIdAndUpdate(property_id, {
+        $inc: { current_rent: + 1, house_count: + 1 }
+      },
+      {returnDocument: 'after'}
+      )
 
-//       return updatePlayer
-//     } catch (error) {
-//       logger.error('Failed to update Position service:', error);
-//       return  'Failed to update Position service' ;
-//     }
-//   }
+      if (!updateProperty) {
+        throw new Error ('Failed update property')
+      }
 
-//   async setBoardIdInPlaers(players: IPlayer[], board_id: string) {
-//     try {
-//        for (const player of players) {
-//       await this.model.findByIdAndUpdate(player._id, { board_id }) 
-//     }
-//     } catch (error) {
-//       logger.error('Failed to set board id in players service:', error);
-//       return  'Failed to set board id in players service' ;
-//     }
-//   }
+      this.cache.addKeyInCache(property_id, updateProperty)
 
-
-
-  private getPropertyCache(id: string): types.IProperty | null {
-    return this.cache.getValueInKey(id) as types.IProperty | null;
+      return updateProperty
+    } catch (error) {
+      logger.error('Failed to update Position service:', error);
+      return  'Failed to update Position service' ;
+    }
   }
+
+  async mortgageUpdateProperty(property_id: string, value: boolean): Promise<types.IProperty | string> {
+    try {
+      if (!property_id) {
+        throw new Error('Failed to props property id in update property')
+      }
+
+      const updateProperty = await this.model.findByIdAndUpdate(property_id, {
+        is_mortgage: value,
+      },
+      {returnDocument: 'after'}
+      )
+
+      if (!updateProperty) {
+        throw new Error ('Failed update property')
+      }
+
+      this.cache.addKeyInCache(property_id, updateProperty)
+
+      return updateProperty
+    } catch (error) {
+      logger.error('Failed to update Position service:', error);
+      return  'Failed to update Position service' ;
+    }
+  }
+
 }

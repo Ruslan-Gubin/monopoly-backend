@@ -38,10 +38,10 @@ export class PlayerService {
             }
             const playersBoard = [];
             for (const player of players) {
-                const playerId = player._id.toString();
+                const playerId = player.toString();
                 let playerCache = this.cache.getValueInKey(playerId);
                 if (!playerCache) {
-                    playerCache = await this.model.findById(player._id);
+                    playerCache = await this.model.findById(player);
                     if (!playerCache) {
                         throw new Error('Failed get players id board');
                     }
@@ -135,6 +135,17 @@ export class PlayerService {
             const player = await this.model.findByIdAndUpdate(player_id, {
                 $inc: { money: payVariant }
             }, { returnDocument: 'after' });
+            this.cache.addKeyInCache(player_id, player);
+            return player;
+        }
+        catch (error) {
+            logger.error('Failed to set board id in players service:', error);
+            return 'Failed to set board id in players service';
+        }
+    }
+    async updateFields(player_id, fields) {
+        try {
+            const player = await this.model.findByIdAndUpdate(player_id, fields, { returnDocument: 'after' });
             this.cache.addKeyInCache(player_id, player);
             return player;
         }

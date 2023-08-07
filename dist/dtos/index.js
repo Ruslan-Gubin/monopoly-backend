@@ -7,3 +7,4 @@ export * from './DiceDTO.js';
 export * from './PlayerDTO.js';
 export * from './PropertyDTO.js';
 export * from './AuctionDTO.js';
+export * from './GameOverDTO.js';

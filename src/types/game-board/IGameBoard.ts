@@ -1,4 +1,4 @@
-import {  Document, IActionCard, IDice, IPlayer, IProperty, } from '../index.js';
+import {  Document,  IDice, IPlayer, IProperty, } from '../index.js';
 
 /**
  * Интерфейс Игровой доски.
@@ -15,32 +15,12 @@ export interface IGameBoard extends Document {
    * Mассив участников игры
    * @type { [IPlayer] }
    */
-  players: IPlayer[];
+  players: string[];
   /**
    * Идентификатор текущего активного игрока
    * @type { IPlayer }
    */
   currentPlayerId: IPlayer;
-  /**
-   * Позиция текущей клетки
-   * @type { number }
-   */
-  currentCellPosition: number; // TODO delete
-  /**
-   * ID текущей клетки
-   * @type { string }
-   */
-  currentCellId: string;
-  /**
-   * Mассив карт шанса
-   * @type { [IActionCard] }
-   */
-  chanse_cards: IActionCard[];  // TODO delete
-  /**
-   * Mассив карт лотореи
-   * @type { [IActionCard] }
-   */
-  lottery_cards: IActionCard[];  // TODO delete
   /**
    * Текуший номер шанса
    * @type { number }
@@ -55,47 +35,7 @@ export interface IGameBoard extends Document {
    * Представляющий состояние игровых костей
    * @type { IDice }
    */
-  dice: IDice; 
-  /**
-   * Список id заложенных клеток
-   * @type { [IProperty] }
-   */
-  mortgaged_cells: IProperty[]  // TODO delete
-  /**
-   * Список id свободных собственностей
-   * @type { [IProperty] }
-   */
-  free_propertyes: IProperty[]  // TODO delete
-  /**
-   * Список id занятых собственностей
-   * @type { [IProperty] }
-   */
-  occupied_properties: IProperty[]  // TODO delete
-  /**
-   * Доступно для покупки
-   * @type { boolean }
-   */
-  available_purchase: boolean  // TODO delete
-  /**
-   * Нужна аренда плата
-   * @type { number }
-   */
-  need_rent: number;  // TODO delete
-  /**
-   * Стадия выбор действия
-   * @type { boolean }
-   */
-  choosing_action: boolean;  // TODO delete
-  /**
-   * Стадия начала хода
-   * @type { boolean }
-   */
-  start_move: boolean;  // TODO delete
-  /**
-   * Собственность текущего игрока
-   * @type { boolean }
-   */
-  property_current_player: boolean;  // TODO delete
+  dice: IDice;
   /**
    * Текущее доступное действие игрока
    * @type { string }
@@ -106,6 +46,11 @@ export interface IGameBoard extends Document {
    * @type { number }
    */
   price: number;
+  /**
+   * Текущий ID аукциона
+   * @type { string }
+   */
+  auction_id: string;
   /**
    * ID для вебсокета
    * @type { number }

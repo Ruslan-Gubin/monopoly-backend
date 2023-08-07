@@ -36,8 +36,8 @@ export class DiceService {
         throw new Error('Failed message in dice update service')
       }
   
-      const dice1 = 5 
-      const dice2 = 4
+      const dice1 = 10  
+      const dice2 = 10
       // const dice1 = randomValue(1, 6)
       // const dice2 = randomValue(1, 6)
 
@@ -84,13 +84,6 @@ export class DiceService {
     } catch (error) {
       logger.error('Failed to get dice in service:', error);
       return 'Failed to get dice in service' ;
-    }
-  }
-
-  async deleteAll() {
-    const allEntity = await this.model.find({})
-    for(const board of allEntity) {
-      await this.model.findByIdAndDelete(board._id)
     }
   }
 

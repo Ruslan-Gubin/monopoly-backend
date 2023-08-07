@@ -5,7 +5,7 @@ import { CacheManager, broadcastConnection, logger, randomValue, getUnicNumber, 
 import * as DTO from '../dtos/index.js';
 import * as types from '../types/index.js';
 import { SESSION_ID } from '../config/web-socked.js';
-import { cellService, diceService, playerService, propertyService } from '../handlers/index.js';
+import { auctionService, cellService, diceService, playerService, propertyService } from '../handlers/index.js';
 
 
 export class GameBoardService {
@@ -30,7 +30,11 @@ export class GameBoardService {
 
       const newPlayers = await playerService.createPlayers(body)
       const newDice = await diceService.createDice()
+      const auction = await auctionService.createAuction()
 
+      if (typeof auction === 'string') {
+        throw new Error(auction);
+      }
       if (typeof newPlayers === 'string') {
         throw new Error(newPlayers);
       }
@@ -47,6 +51,7 @@ export class GameBoardService {
       const newBoard = await this.model.create({ 
         currentPlayerId: newPlayers[randomPlayer]._id,
         players: newPlayers,
+        auction_id: auction._id.toString(),
         dice: newDice,
         chanse_current,
         lottery_current
@@ -69,7 +74,7 @@ export class GameBoardService {
         method: 'createGameBoard',
         title: `Игроки ${playersNameList} перемещаются на игровое поле`,
         board_id: updateBoard._id,
-        user_id: newPlayers.map(player => player.user_id) 
+        user_id: newPlayers.map(player => player.user_id),
       };
     
       broadcastConnection(SESSION_ID, ws, broadData);
@@ -80,7 +85,7 @@ export class GameBoardService {
     }
   }
 
-  async getBoardId(boardId: string) {
+  async getBoardId(boardId: string): Promise<types.IGameBoard | string> {
       try {
         if (!boardId) {
           throw new Error('Failed get board id in params service')
@@ -96,10 +101,27 @@ export class GameBoardService {
           this.cache.addKeyInCache(boardId, boardCache)
         }
         
-        return boardCache
+        return boardCache as types.IGameBoard
       } catch (error) {
         logger.error('Failed to get  game board in service:', error);
-        return { error, text: 'Failed to get  game board in service' };  
+        return 'Failed to get  game board in service';  
+      }
+  }
+
+  async updateBoard(boardId: string, fields: unknown) {
+      try {
+        if (!boardId || !fields) {
+          throw new Error('Failed get props in update board service')
+        }
+        
+        let updateBoard = await this.model.findByIdAndUpdate(boardId, fields, { returnDocument: 'after' }) as types.IGameBoard
+        
+        this.cache.addKeyInCache(boardId, updateBoard)
+        
+        return updateBoard
+      } catch (error) {
+        logger.error('Failed to update board service:', error);
+        return { error, text: 'Failed to update board service' };  
       }
   }
 
@@ -116,6 +138,7 @@ export class GameBoardService {
         throw new Error('Failed to board get data'); 
       }
       const dice = await diceService.getDiceInBoard(board.dice.toString())
+      const auction = await auctionService.getAuctionId(board.auction_id.toString())
 
       ws.send(JSON.stringify({ 
         method: 'connectData', 
@@ -125,6 +148,7 @@ export class GameBoardService {
           players,
           dice,
           propertys,
+          auction,
         } 
       }));
 

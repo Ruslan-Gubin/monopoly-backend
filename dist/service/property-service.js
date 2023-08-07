@@ -292,4 +292,16 @@ export class PropertyService {
             return 'Failed to update Position service';
         }
     }
+    async removePlayerPropertys(player_id) {
+        try {
+            if (!player_id) {
+                throw new Error('Failed to  player id in update property');
+            }
+            await this.model.deleteMany({ owner: player_id });
+        }
+        catch (error) {
+            logger.error('Failed to update Position service:', error);
+            return 'Failed to update Position service';
+        }
+    }
 }

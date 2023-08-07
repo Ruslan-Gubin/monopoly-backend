@@ -16,20 +16,10 @@ const PlayerSchema: Schema<IPlayer> = new Schema({
     required: true,
     default: 0,
   },
-  previous_position: {
-    type: Number,
-    required: true,
-    default: 0,
-  },
   is_active: {
     type: Boolean,
     required: true,
     default: true,
-  },
-  properties: {
-    type: [Schema.Types.ObjectId],
-    ref: 'PropertyModel',
-    default: [],
   },
   in_jail: {
     type: Boolean,
@@ -38,12 +28,6 @@ const PlayerSchema: Schema<IPlayer> = new Schema({
   },
   current_jail: {
     type: Number,
-    default: 3,
-  },
-  getOutOfJailCards: {
-    type: Number,
-    required: true,
-    default: 0,
   },
   color: {
     type: String,
@@ -56,10 +40,6 @@ const PlayerSchema: Schema<IPlayer> = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'UserModel',
     require: true,
-  },
-  syndicate: {
-    type: [String],
-    default: [],
   },
   board_id: {
     type: Schema.Types.ObjectId,

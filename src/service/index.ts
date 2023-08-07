@@ -9,4 +9,6 @@ export * from './dice-service.js';
 export * from './property-service.js';
 export * from './move-service.js';
 export * from './property-action-service.js';
+export * from './auction-action-service.js';
 export * from './auction-service.js';
+export * from './game-over-service.js';

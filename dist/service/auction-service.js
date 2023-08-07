@@ -1,18 +1,60 @@
-import { GameBoardModel } from '../models/index.js';
-import { logger, } from '../utils/index.js';
+import { logger } from '../utils/index.js';
+import { AuctionModel } from '../models/index.js';
 export class AuctionService {
-    constructor({ cache, }) {
-        this.model = GameBoardModel;
+    constructor({ cache }) {
+        this.model = AuctionModel;
         this.cache = cache;
     }
-    async auctionRefresh(ws, message) {
+    async createAuction() {
         try {
-            const { cell_name, player_name, property_price, ws_id } = message.body;
-            console.log(cell_name, player_name, property_price, ws_id);
+            const newAuction = await this.model.create({});
+            if (!newAuction) {
+                throw new Error('Failed to create new auction');
+            }
+            const id = newAuction._id.toString();
+            this.cache.addKeyInCache(id, newAuction);
+            return newAuction;
         }
         catch (error) {
-            logger.error('Failed to update finished move cell tax:', error);
-            return { error, text: 'Failed to update finished move cell tax' };
+            logger.error('Failed to create new auction:', error);
+            return 'Failed to create new auction';
+        }
+    }
+    async getAuctionId(auction_id) {
+        try {
+            if (!auction_id) {
+                throw new Error('Failed to auction id in get auction');
+            }
+            let auctionCache = this.cache.getValueInKey(auction_id);
+            if (!auctionCache) {
+                auctionCache = await this.model.findById(auction_id);
+                if (!auctionCache) {
+                    throw new Error('Failed to get auction');
+                }
+                this.cache.addKeyInCache(auction_id, auctionCache);
+            }
+            return auctionCache;
+        }
+        catch (error) {
+            logger.error('Failed to create new auction:', error);
+            return 'Failed to create new auction';
+        }
+    }
+    async updateAuction(auction_id, fields) {
+        try {
+            if (!auction_id || !fields) {
+                throw new Error('Failed to props in update auction');
+            }
+            const updateAuction = await this.model.findByIdAndUpdate(auction_id, fields, { returnDocument: 'after' });
+            if (!updateAuction) {
+                throw new Error('Failed to update fields in auction');
+            }
+            this.cache.addKeyInCache(auction_id, updateAuction);
+            return updateAuction;
+        }
+        catch (error) {
+            logger.error('Failed to update fields auction:', error);
+            return 'Failed to update fields auction';
         }
     }
 }

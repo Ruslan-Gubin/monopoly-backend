@@ -1,7 +1,7 @@
 import { Model } from 'mongoose';
 import { WebSocket } from 'ws';
 import { GameBoardModel } from '../models/index.js';
-import { CacheManager, broadcastConnection, logger, randomValue, getUnicNumber, checkCellType, chanceCards, lotteryCards, nextPlayerQueue } from '../utils/index.js';
+import { CacheManager, broadcastConnection, logger, checkCellType, chanceCards, lotteryCards, nextPlayerQueue } from '../utils/index.js';
 import * as DTO from '../dtos/index.js';
 import * as types from '../types/index.js';
 import { diceService, playerService, propertyService } from '../handlers/index.js';

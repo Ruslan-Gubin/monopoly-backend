@@ -7,28 +7,10 @@ const GameBoardSchema: Schema<IGameBoard> = new Schema({
     required: true,
     default: 'nep'
   },
-  currentPlayerId: { //Текущая очередь игрока
+  currentPlayerId: { 
     type: Schema.Types.ObjectId,
     ref: 'PlayerModel',
     required: true,
-  },
-  currentCellPosition: { //Текущая позиция  игрока todo Delete
-    type: Number,
-    default: 0,
-  },
-  currentCellId: { 
-    type: String,
-    default: null,
-  },
-  chanse_cards: { //todo Delete 
-    type: [Schema.Types.ObjectId], 
-    ref: 'ActionCardModel',
-    default: [],
-  },
-  lottery_cards: {  //todo Delete
-    type: [Schema.Types.ObjectId], 
-    ref: 'ActionCardModel',
-    default: [],
   },
   chanse_current: {  
     type: Number, 
@@ -39,47 +21,12 @@ const GameBoardSchema: Schema<IGameBoard> = new Schema({
     default: 0,
   },
   players: {
-    type: [Schema.Types.ObjectId],
-    ref: 'PlayerModel',
+    type: [String],
     default: [],
   },
   dice: {
     type: Schema.Types.ObjectId,
     ref: 'DiceModel',
-  },
-  free_propertyes: { //todo Delete
-    type: [Schema.Types.ObjectId],
-    ref: 'PropertyModel',
-  },
-  mortgaged_cells: { //todo Delete
-    type: [Schema.Types.ObjectId],
-    ref: 'PropertyModel',
-    default: [],
-  },
-  occupied_properties: { //todo Delete
-    type: [Schema.Types.ObjectId],
-    ref: 'PropertyModel',
-    default: [],
-  },
-  available_purchase: { // доступно для покупки
-    type: Boolean,
-    default: false,
-  },
-  need_rent: { 
-    type: Number,
-    default: 0,
-  },
-  choosing_action: { 
-    type: Boolean,
-    default: false,
-  },
-  start_move: { 
-    type: Boolean,
-    default: true,
-  },
-  property_current_player: { 
-    type: Boolean,
-    default: false,
   },
   action: { 
     type: String,
@@ -88,6 +35,10 @@ const GameBoardSchema: Schema<IGameBoard> = new Schema({
   price: { 
     type: Number,
     default: 0,
+  },
+  auction_id: { 
+    type: String,
+    required: true,
   },
   ws_id: { 
     type: Number,

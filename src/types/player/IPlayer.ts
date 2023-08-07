@@ -1,4 +1,4 @@
-import { IGameBoard, IProperty, IUser } from '../index.js';
+import { IGameBoard, IUser } from '../index.js';
 import { Document } from '../Document/index.js'
 
 /**
@@ -18,11 +18,6 @@ export interface IPlayer extends Document {
    */
   position: number;
   /**
-   * Предыдущая позиция на поле.
-   * @type {number}
-   */
-  previous_position: number;
-  /**
    * Флаг, указывающий, является ли игрок активным или проигравшим.
    * @type {boolean}
    */
@@ -31,12 +26,7 @@ export interface IPlayer extends Document {
    * Количество денег у игрока.
    * @type {number}
    */
-  money: number; 
-  /**
-   * Список недвижимости, принадлежащей игроку.
-   * @type { IProperty[] }
-   */
-  properties: IProperty[]; 
+  money: number;
   /**
    * Флаг, указывающий, находится ли игрок в тюрьме.
    * @type {boolean}
@@ -47,11 +37,6 @@ export interface IPlayer extends Document {
    * @type {number}
    */
   current_jail: number; 
-   /**
-   * Количество карточек "Выход из тюрьмы".
-   * @type {number}
-   */
-  getOutOfJailCards: number;  
   /**
    * Цвет игровой фишки.
    * @type {string}
@@ -66,12 +51,7 @@ export interface IPlayer extends Document {
    * ID пользователя.
    * @type { string }
    */
-  user_id: IUser;  
-  /**
-   * список ячеек синдиката.
-   * @type { string }
-   */
-  syndicate: string[];  
+  user_id: IUser; 
   /**
    * ID игровой доски.
    * @type { IGameBoard }

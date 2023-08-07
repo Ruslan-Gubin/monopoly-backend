@@ -24,8 +24,8 @@ export class DiceService {
             if (!dice_id || !user_name || !player_id) {
                 throw new Error('Failed message in dice update service');
             }
-            const dice1 = 5;
-            const dice2 = 4;
+            const dice1 = 10;
+            const dice2 = 10;
             const diceUpdate = await this.model.findByIdAndUpdate(dice_id, {
                 current_id: player_id,
                 dice1,
@@ -60,12 +60,6 @@ export class DiceService {
         catch (error) {
             logger.error('Failed to get dice in service:', error);
             return 'Failed to get dice in service';
-        }
-    }
-    async deleteAll() {
-        const allEntity = await this.model.find({});
-        for (const board of allEntity) {
-            await this.model.findByIdAndDelete(board._id);
         }
     }
     getDiceCache(id) {

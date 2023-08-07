@@ -1,22 +1,25 @@
-import { GameBoardController, PlayerController, DiceController, CellController, MoveController, PropertyActionController, AuctionController } from '../controllers/index.js';
-import { GameBoardService, PlayerService, DiceService, CellService, PropertyService, MoveService, PropertyActionService, AuctionService } from '../service/index.js';
+import * as controller from '../controllers/index.js';
+import * as service from '../service/index.js';
 import { nodeCache } from '../utils/index.js';
 import { authController } from './session-handlers.js';
-export const gameBoardService = new GameBoardService({ cache: nodeCache });
-export const playerService = new PlayerService({ cache: nodeCache });
-export const diceService = new DiceService({ cache: nodeCache });
-export const cellService = new CellService({ cache: nodeCache });
-export const propertyService = new PropertyService({ cache: nodeCache });
-export const moveService = new MoveService({ cache: nodeCache });
-export const propertyActionService = new PropertyActionService({ cache: nodeCache });
-export const auctionService = new AuctionService({ cache: nodeCache });
-export const cellController = new CellController(cellService);
-export const gameBoardController = new GameBoardController(gameBoardService);
-export const playerController = new PlayerController(playerService);
-export const diceController = new DiceController(diceService);
-export const moveController = new MoveController(moveService);
-export const propertyActionController = new PropertyActionController(propertyActionService);
-export const auctionController = new AuctionController(auctionService);
+export const gameBoardService = new service.GameBoardService({ cache: nodeCache });
+export const playerService = new service.PlayerService({ cache: nodeCache });
+export const diceService = new service.DiceService({ cache: nodeCache });
+export const cellService = new service.CellService({ cache: nodeCache });
+export const propertyService = new service.PropertyService({ cache: nodeCache });
+export const moveService = new service.MoveService({ cache: nodeCache });
+export const propertyActionService = new service.PropertyActionService({ cache: nodeCache });
+export const auctionActionService = new service.AuctionActionService();
+export const auctionService = new service.AuctionService({ cache: nodeCache });
+export const gameOverService = new service.GameOverService();
+export const cellController = new controller.CellController(cellService);
+export const gameBoardController = new controller.GameBoardController(gameBoardService);
+export const playerController = new controller.PlayerController(playerService);
+export const diceController = new controller.DiceController(diceService);
+export const moveController = new controller.MoveController(moveService);
+export const propertyActionController = new controller.PropertyActionController(propertyActionService);
+export const auctionActionControllerer = new controller.AuctionActionController(auctionActionService);
+export const gameOverController = new controller.GameOverController(gameOverService);
 export const boardHandlers = {
     connection: [gameBoardController.handleMessage, authController.handleMessage],
     disconect: [gameBoardController.handleMessage, authController.handleMessage],
@@ -26,6 +29,7 @@ export const boardHandlers = {
     buyProperty: [propertyActionController.handleMessage],
     updateProperty: [propertyActionController.handleMessage],
     mortgageProperty: [propertyActionController.handleMessage],
-    playerGameOver: [gameBoardController.handleMessage],
-    auctionRefresh: [auctionController.handleMessage],
+    playerGameOver: [gameOverController.handleMessage],
+    auctionRefresh: [auctionActionControllerer.handleMessage],
+    auctionAction: [auctionActionControllerer.handleMessage],
 };

@@ -15,9 +15,6 @@ export class GameBoardController {
                     case 'pay':
                         this.payPrice(ws, message);
                         break;
-                    case 'playerGameOver':
-                        console.log(message);
-                        break;
                     default:
                         throw new Error('Invalid method');
                 }

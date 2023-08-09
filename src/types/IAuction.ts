@@ -6,6 +6,6 @@ export interface IAuction {
   players: string[];
   /** Лидер */
   last_player_bet: string | null;
-  /** Активный */
-  is_active: boolean;
+  /** ID ячейки */
+  cell_id: string;
 }

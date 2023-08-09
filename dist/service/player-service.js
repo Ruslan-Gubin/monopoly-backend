@@ -38,14 +38,13 @@ export class PlayerService {
             }
             const playersBoard = [];
             for (const player of players) {
-                const playerId = player.toString();
-                let playerCache = this.cache.getValueInKey(playerId);
+                let playerCache = this.cache.getValueInKey(player);
                 if (!playerCache) {
                     playerCache = await this.model.findById(player);
                     if (!playerCache) {
                         throw new Error('Failed get players id board');
                     }
-                    this.cache.addKeyInCache(playerId, playerCache);
+                    this.cache.addKeyInCache(player, playerCache);
                 }
                 playersBoard.push(playerCache);
             }
@@ -54,6 +53,26 @@ export class PlayerService {
         catch (error) {
             logger.error('Failed to get players in board service:', error);
             return 'Failed to get players in board service';
+        }
+    }
+    async findPlayerId(id) {
+        try {
+            if (!id) {
+                throw new Error('Failed to id in get player service');
+            }
+            let playerCache = this.cache.getValueInKey(id);
+            if (!playerCache) {
+                playerCache = await this.model.findById(id);
+                if (!playerCache) {
+                    throw new Error('Failed to get player id in db');
+                }
+                this.cache.addKeyInCache(id, playerCache);
+            }
+            return playerCache;
+        }
+        catch (error) {
+            logger.error('Failed to get player in service:', error);
+            return 'Failed to get player in service';
         }
     }
     async updatePosition({ player_id, newPosition, previous_position }) {
@@ -74,48 +93,6 @@ export class PlayerService {
         catch (error) {
             logger.error('Failed to update Position service:', error);
             return 'Failed to update Position service';
-        }
-    }
-    async positionTheatre({ player_id, previous_position }) {
-        try {
-            const updatePlayer = await this.model.findByIdAndUpdate(player_id, {
-                position: 10,
-                previous_position,
-                in_jail: true,
-                current_jail: 4,
-            }, { returnDocument: 'after' });
-            if (!updatePlayer) {
-                throw new Error('Failed get players update board');
-            }
-            const updatePlayerId = updatePlayer._id.toString();
-            this.cache.addKeyInCache(updatePlayerId, updatePlayer);
-            return updatePlayer;
-        }
-        catch (error) {
-            logger.error('Failed to update Position theatre service:', error);
-            return 'Failed to update Position theatre service';
-        }
-    }
-    async updateTheatre({ player_id, isDouble }) {
-        try {
-            let player = await this.model.findByIdAndUpdate(player_id, {
-                $inc: { current_jail: -1 }
-            }, { returnDocument: 'after' });
-            if (!player) {
-                throw new Error('Failed get players update board');
-            }
-            if (player !== null && player.current_jail === 0 || isDouble) {
-                player = await this.model.findByIdAndUpdate(player_id, {
-                    in_jail: false,
-                    current_jail: 0,
-                }, { returnDocument: 'after' });
-            }
-            this.cache.addKeyInCache(player_id, player);
-            return player;
-        }
-        catch (error) {
-            logger.error('Failed to update theatre count service:', error);
-            return 'Failed to update theatre count service';
         }
     }
     async setBoardIdInPlaers(players, board_id) {
@@ -139,19 +116,41 @@ export class PlayerService {
             return player;
         }
         catch (error) {
-            logger.error('Failed to set board id in players service:', error);
-            return 'Failed to set board id in players service';
+            logger.error('Failed to update money in players service:', error);
+            return 'Failed to update money in players service';
         }
     }
     async updateFields(player_id, fields) {
         try {
+            if (!player_id)
+                throw new Error('Failed to id in update Fields player service');
+            if (!fields)
+                throw new Error('Failed to fields in update Fields player service');
             const player = await this.model.findByIdAndUpdate(player_id, fields, { returnDocument: 'after' });
+            if (!player)
+                throw new Error('Failed to update player fields');
             this.cache.addKeyInCache(player_id, player);
             return player;
         }
         catch (error) {
             logger.error('Failed to set board id in players service:', error);
             return 'Failed to set board id in players service';
+        }
+    }
+    async removePlayer(id) {
+        try {
+            if (!id) {
+                throw new Error('Failed to id in remove player service');
+            }
+            await this.model.findByIdAndDelete(id);
+            const cachePlayer = this.cache.getValueInKey(id);
+            if (cachePlayer) {
+                this.cache.removeKeyFromCache(id);
+            }
+        }
+        catch (error) {
+            logger.error('Failed to remove players service:', error);
+            return 'Failed to remove players service';
         }
     }
     async deleteAll() {

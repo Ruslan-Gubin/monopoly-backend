@@ -8,3 +8,4 @@ export * from './PlayerDTO.js';
 export * from './PropertyDTO.js';
 export * from './AuctionDTO.js';
 export * from './GameOverDTO.js';
+export * from './MoveActionDTO.js';

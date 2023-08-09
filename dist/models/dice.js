@@ -23,5 +23,9 @@ const DiceSchema = new Schema({
         type: Boolean,
         default: false,
     },
+    double_count: {
+        type: Number,
+        default: 0,
+    },
 }, { timestamps: true });
 export const DiceModel = model('Dice', DiceSchema);

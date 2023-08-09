@@ -10,6 +10,7 @@ export interface AuctionRefreshDTO {
     cell_name: string;
     property_price: number;
     players: string[];
+    cell_id: string;
   };
 }
 export interface AuctionActionhDTO {

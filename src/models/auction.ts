@@ -14,9 +14,8 @@ const AuctionSchema: Schema<IAuction> = new Schema({
     type: String,
     default: null,
   },
-  is_active: { // TODO delete
-    type: Boolean,
-    default: false,
+  cell_id: { 
+    type: String,
   },
 },
 { timestamps: true },

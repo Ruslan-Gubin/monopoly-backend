@@ -20,7 +20,7 @@ const GameBoardSchema = new Schema({
     },
     players: {
         type: [String],
-        default: [],
+        required: true,
     },
     dice: {
         type: Schema.Types.ObjectId,
@@ -28,7 +28,7 @@ const GameBoardSchema = new Schema({
     },
     action: {
         type: String,
-        default: 'trow dice',
+        default: 'start move',
     },
     price: {
         type: Number,

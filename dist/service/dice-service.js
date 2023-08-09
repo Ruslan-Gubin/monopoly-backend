@@ -1,5 +1,5 @@
 import { DiceModel } from '../models/index.js';
-import { logger } from '../utils/index.js';
+import { logger, randomValue } from '../utils/index.js';
 export class DiceService {
     constructor({ cache }) {
         this.model = DiceModel;
@@ -19,21 +19,15 @@ export class DiceService {
             return 'Failed to create players in service';
         }
     }
-    async diceUpdate({ dice_id, user_name, player_id }) {
+    async diceUpdate({ dice_id, fields }) {
         try {
-            if (!dice_id || !user_name || !player_id) {
-                throw new Error('Failed message in dice update service');
+            if (!dice_id) {
+                throw new Error('Failed id in props dice update service');
             }
-            const dice1 = 10;
-            const dice2 = 10;
-            const diceUpdate = await this.model.findByIdAndUpdate(dice_id, {
-                current_id: player_id,
-                dice1,
-                dice2,
-                value: dice1 + dice2,
-                isDouble: true,
-                user_name,
-            }, { returnDocument: 'after' });
+            else if (typeof fields === 'string') {
+                throw new Error('Failed fields props in dice update service');
+            }
+            const diceUpdate = await this.model.findByIdAndUpdate(dice_id, fields, { returnDocument: 'after' });
             this.cache.addKeyInCache(dice_id, diceUpdate);
             return diceUpdate;
         }
@@ -60,6 +54,42 @@ export class DiceService {
         catch (error) {
             logger.error('Failed to get dice in service:', error);
             return 'Failed to get dice in service';
+        }
+    }
+    async removeDice(id) {
+        try {
+            if (!id) {
+                throw new Error('Failed id in remove dice service');
+            }
+            await this.model.findByIdAndDelete(id);
+            const cacheDice = this.cache.getValueInKey(id);
+            if (cacheDice) {
+                this.cache.removeKeyFromCache(id);
+            }
+        }
+        catch (error) {
+            logger.error('Failed to get dice in service:', error);
+            return 'Failed to get dice in service';
+        }
+    }
+    roolUpdateFields(player_id) {
+        try {
+            if (!player_id) {
+                throw new Error('Failed player id in get rool update fields dice service');
+            }
+            const dice1 = randomValue(1, 6);
+            const dice2 = randomValue(1, 6);
+            return {
+                dice1,
+                dice2,
+                value: dice1 + dice2,
+                isDouble: dice1 === dice2,
+                current_id: player_id,
+            };
+        }
+        catch (error) {
+            logger.error('Failed to get update fields dice in service:', error);
+            return 'Failed to get update fields dice in service';
         }
     }
     getDiceCache(id) {

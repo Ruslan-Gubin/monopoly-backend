@@ -4,7 +4,7 @@ export class AuctionActionService {
     constructor() { }
     async auctionRefresh(ws, message) {
         try {
-            const { cell_name, player_name, property_price, ws_id, board_id, players, auction_id } = message.body;
+            const { cell_name, player_name, property_price, ws_id, board_id, players, auction_id, cell_id } = message.body;
             const auction = await auctionService.getAuctionId(auction_id);
             if (typeof auction === 'string') {
                 throw new Error(auction);
@@ -13,7 +13,7 @@ export class AuctionActionService {
             if (typeof board === 'string') {
                 throw new Error(board);
             }
-            const updateAuctionFields = { players, is_active: true, price: property_price, last_player_bet: null };
+            const updateAuctionFields = { players, price: property_price, last_player_bet: null, cell_id };
             const updateBoardFields = { action: 'auction' };
             Object.assign(auction, updateAuctionFields);
             Object.assign(board, updateBoardFields);
@@ -38,7 +38,6 @@ export class AuctionActionService {
         try {
             const { player_name, ws_id, board_id, auction_id, action, player_id, price, players, last_player_bet, isDouble, playersQueue, currentPlayerQueue, cell_name, cell } = message.body;
             let playersList = players;
-            let isActive = true;
             let lastPlayer = last_player_bet;
             let currentPrice = price;
             let board = null;
@@ -47,7 +46,7 @@ export class AuctionActionService {
             let property = null;
             let title = '';
             if (action) {
-                currentPrice + 50;
+                currentPrice = price + 50;
                 lastPlayer = player_id;
                 title = `Игрок ${player_name} повышает ставки до ${currentPrice} руб`;
             }
@@ -56,7 +55,7 @@ export class AuctionActionService {
                 title = `Игрок ${player_name} отказывается от участия в аукционе`;
             }
             if (playersList.length === 1 && lastPlayer) {
-                const { newProperty, updatePlayer } = await this.winAuction(lastPlayer, price, board_id, player_id, cell);
+                const { newProperty, updatePlayer } = await this.winAuction(lastPlayer, price, board_id, cell);
                 const { updateBoard, updateFields } = await this.updateQueue(board_id, playersQueue, currentPlayerQueue, isDouble);
                 property = newProperty;
                 player = updatePlayer;
@@ -64,12 +63,10 @@ export class AuctionActionService {
                 updateBoardFields = updateFields;
                 title = `Игрок ${player.name} выигрывает в аукционе ${cell_name} за ${price} Руб`;
                 playersList = [];
-                isActive = false;
                 lastPlayer = null;
                 currentPrice = 0;
             }
             if (playersList.length === 0 && !lastPlayer) {
-                isActive = false;
                 currentPrice = 0;
                 lastPlayer = null;
                 title = `Аукцион не состоялся`;
@@ -81,7 +78,7 @@ export class AuctionActionService {
             if (typeof auction === 'string') {
                 throw new Error(auction);
             }
-            const updateAuctionFields = { players: playersList, price: currentPrice, is_active: isActive, last_player_bet: lastPlayer };
+            const updateAuctionFields = { players: playersList, price: currentPrice, last_player_bet: lastPlayer };
             Object.assign(auction, updateAuctionFields);
             if (board && updateBoardFields) {
                 Object.assign(board, updateBoardFields);
@@ -108,12 +105,12 @@ export class AuctionActionService {
             return { error, text: 'Failed to update finished move cell tax' };
         }
     }
-    async winAuction(lastPlayer, price, board_id, player_id, cell) {
+    async winAuction(lastPlayer, price, board_id, cell) {
         const updatePlayer = await playerService.moneyUpdate(lastPlayer, price, false);
         if (typeof updatePlayer === 'string') {
-            throw new Error('Failed to update player many in auction buy property');
+            throw new Error(updatePlayer);
         }
-        const newProperty = await propertyService.create({ board_id, player_id, cell, player_color: updatePlayer.color });
+        const newProperty = await propertyService.create({ board_id, player_id: lastPlayer, cell, player_color: updatePlayer.color });
         if (typeof newProperty === 'string') {
             throw new Error(newProperty);
         }

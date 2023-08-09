@@ -12,9 +12,8 @@ const AuctionSchema = new Schema({
         type: String,
         default: null,
     },
-    is_active: {
-        type: Boolean,
-        default: false,
+    cell_id: {
+        type: String,
     },
 }, { timestamps: true });
 export const AuctionModel = model('Auction', AuctionSchema);

@@ -1,5 +1,10 @@
 export interface DiceUpdateDTO {
   dice_id: string;
-  user_name: string;
-  player_id: string;
+  fields: {
+    dice1: number;
+    dice2: number;
+    value: number;
+    isDouble: boolean;
+    current_id: string;
+  } | string;
 }

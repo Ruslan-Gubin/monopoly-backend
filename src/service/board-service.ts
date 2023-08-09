@@ -13,7 +13,7 @@ export class GameBoardService {
   private readonly allGameBoardKey = 'allGameBoard';
   private cache: CacheManager<types.IGameBoard | types.IGameBoard[]>;
 
-  constructor({
+  constructor({ 
     cache,
   }: {
     cache: CacheManager<types.IGameBoard>;
@@ -50,19 +50,19 @@ export class GameBoardService {
 
       const newBoard = await this.model.create({ 
         currentPlayerId: newPlayers[randomPlayer]._id,
-        players: newPlayers,
+        players: newPlayers.map(player => player._id),
         auction_id: auction._id.toString(),
         dice: newDice,
         chanse_current,
-        lottery_current
+        lottery_current, 
       });
    
       if (!newBoard) throw new Error('Failed create board in service');
       
-      const boardId = getUnicNumber(newBoard._id)
+      const ws_id = getUnicNumber(newBoard._id.toString())
 
       const updateBoard = await this.model.findByIdAndUpdate(newBoard._id, { 
-        ws_id: boardId 
+        ws_id
       }, { returnDocument: 'after' }) as types.IGameBoard
       
       await playerService.setBoardIdInPlaers(newPlayers, newBoard._id)
@@ -108,20 +108,20 @@ export class GameBoardService {
       }
   }
 
-  async updateBoard(boardId: string, fields: unknown) {
+  async updateBoard(boardId: string, fields: unknown): Promise<types.IGameBoard | string> {
       try {
         if (!boardId || !fields) {
           throw new Error('Failed get props in update board service')
         }
         
-        let updateBoard = await this.model.findByIdAndUpdate(boardId, fields, { returnDocument: 'after' }) as types.IGameBoard
-        
+        let updateBoard = await this.model.findByIdAndUpdate(boardId, fields, { returnDocument: 'after' })
+        if (!updateBoard) throw new Error('Failed to update fields in board service')
         this.cache.addKeyInCache(boardId, updateBoard)
         
         return updateBoard
       } catch (error) {
-        logger.error('Failed to update board service:', error);
-        return { error, text: 'Failed to update board service' };  
+        logger.error('Failed to update fields in board service:', error);
+        return 'Failed to update fields in board service';  
       }
   }
 
@@ -142,7 +142,7 @@ export class GameBoardService {
 
       ws.send(JSON.stringify({ 
         method: 'connectData', 
-        data: {
+        data: { 
           board,
           cells,
           players,
@@ -201,6 +201,29 @@ export class GameBoardService {
       return { error, text: 'Failed to update finished move cell tax' };
     }
   }
+
+  async removeBoard(id: string) {
+    try {
+        if (!id) {
+          throw new Error('Failer to id in remove board')
+        }
+
+        await this.model.findByIdAndRemove(id)
+        
+        const cacheBoard = this.cache.getValueInKey(id)
+
+        if (cacheBoard) {
+          this.cache.removeKeyFromCache(id)
+        }
+        
+
+    } catch (error) {
+      logger.error('Failed to update finished move cell tax:', error);
+      return { error, text: 'Failed to update finished move cell tax' };
+    }
+  }
+
+
 
   
   async disconectUser(ws: WebSocket, body: DTO.SessionDisconectBodyDTO) {

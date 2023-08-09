@@ -15,6 +15,9 @@ export class GameOverController {
         case 'playerGameOver':
           this.playerGameOver(ws, message)
         break;    
+        case 'removeGame':
+          this.removeGame(ws, message)
+        break;    
         default:
           throw new Error('Invalid method');
       }
@@ -29,6 +32,17 @@ export class GameOverController {
   private playerGameOver = async (ws: WebSocket, message: DTO.GameOverPropsDTO) => {
     try {
       await this.gameOverService.playerGameOver(ws, message);
+    } catch (error) {
+      logger.error('Failed to connect WebSocket:', error);
+      ws.send(JSON.stringify({ error: 'Failed to connect WebSocket' }));
+    }
+  };
+
+  /** Игра окончена удаляем все что связано с игрой */
+  private removeGame = async (ws: WebSocket, message: { method: string, body: DTO.RemoveGameDTO }) => {
+    try {
+      const body = message.body
+      await this.gameOverService.removeGame(body);
     } catch (error) {
       logger.error('Failed to connect WebSocket:', error);
       ws.send(JSON.stringify({ error: 'Failed to connect WebSocket' }));

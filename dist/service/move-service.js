@@ -1,31 +1,37 @@
-import { GameBoardModel } from '../models/index.js';
 import { broadcastConnection, logger, checkCellType, chanceCards, lotteryCards, nextPlayerQueue } from '../utils/index.js';
-import { diceService, playerService, propertyService } from '../handlers/index.js';
+import { diceService, gameBoardService, playerService, propertyService } from '../handlers/index.js';
 export class MoveService {
-    constructor({ cache, }) {
-        this.model = GameBoardModel;
-        this.cache = cache;
-    }
+    constructor() { }
     async roolDice(ws, message) {
         try {
             if (!message) {
                 throw new Error('Failed message in rool dice');
             }
-            const { board_id, dice_id, in_jail, player_id, user_name, ws_id, players } = message.body;
-            let boardUpdate = null;
-            let playerUpdate = null;
-            const dice = await diceService.diceUpdate({ dice_id, player_id, user_name });
-            if (typeof dice === 'string') {
+            const { board_id, dice_id, in_jail, player_id, user_name, ws_id, players, current_jail } = message.body;
+            let playerUpdateFields = null;
+            let boardUpdateFields = null;
+            let player = null;
+            let board = null;
+            const diceUpdateFields = diceService.roolUpdateFields(player_id);
+            const dice = await diceService.getDiceInBoard(dice_id);
+            if (typeof dice === 'string')
                 throw new Error(dice);
-            }
+            Object.assign(dice, diceUpdateFields);
             if (in_jail) {
-                playerUpdate = await playerService.updateTheatre({ player_id, isDouble: dice.dice1 === dice.dice2 });
-                if (typeof playerUpdate === 'string') {
-                    throw new Error('Failed update jail count');
+                player = await playerService.findPlayerId(player_id);
+                if (typeof player === 'string')
+                    throw new Error(player);
+                playerUpdateFields = { in_jail: true, current_jail: current_jail - 1 };
+                Object.assign(player, playerUpdateFields);
+                if (player.current_jail === 0 || dice.isDouble) {
+                    playerUpdateFields = { in_jail: false, current_jail: 0 };
+                    Object.assign(player, playerUpdateFields);
                 }
-                if (playerUpdate.in_jail) {
-                    const currentPlayerId = nextPlayerQueue(players, player_id, dice.dice1 === dice.dice2);
-                    boardUpdate = await this.model.findByIdAndUpdate(board_id, { currentPlayerId }, { returnDocument: 'after' });
+                if (player.in_jail) {
+                    board = await gameBoardService.getBoardId(board_id);
+                    const currentPlayerId = nextPlayerQueue(players, player_id, dice.isDouble);
+                    boardUpdateFields = { currentPlayerId };
+                    Object.assign(board, boardUpdateFields);
                 }
             }
             const broadData = {
@@ -33,11 +39,16 @@ export class MoveService {
                 title: `Игрок: ${user_name} выкидывает ${dice.dice1} и ${dice.dice2}`,
                 data: {
                     dice,
-                    playerUpdate,
-                    boardUpdate,
+                    player,
+                    board,
                 }
             };
             broadcastConnection(ws_id, ws, broadData);
+            await diceService.diceUpdate({ dice_id, fields: diceUpdateFields });
+            if (player)
+                await playerService.updateFields(player_id, playerUpdateFields);
+            if (board)
+                await gameBoardService.updateBoard(board_id, boardUpdateFields);
         }
         catch (error) {
             logger.error('Failed to update dice in service:', error);
@@ -49,40 +60,72 @@ export class MoveService {
             if (!message) {
                 throw new Error('Failed message in finished move');
             }
-            const { newPosition, player_id, previous_position, cell_id, cell, ws_id } = message.body;
-            const player = await playerService.updatePosition({
-                player_id,
-                newPosition,
-                previous_position,
-            });
-            if (typeof player === 'string' || !cell) {
-                throw new Error('Failed get cell or playerUpdate in board');
-            }
-            const cellType = checkCellType(cell.type);
+            const { cell_name, cell_price, newPosition, player_id, previous_position, ws_id, board_id, cell_type } = message.body;
+            const player = await playerService.findPlayerId(player_id);
+            if (typeof player === 'string')
+                throw new Error(player);
+            const initMoney = previous_position > newPosition ? player.money + 200 : player.money;
+            const board = await gameBoardService.getBoardId(board_id);
+            if (typeof board === 'string')
+                throw new Error(board);
+            let playerUpdateFields = { position: newPosition, money: initMoney };
+            let boardUpdateFields = null;
+            let title = `Игрок ${player.name} останавливается на ${cell_name}`;
+            const cellType = checkCellType(cell_type);
             switch (cellType) {
                 case 'property':
-                    await this.moveFinishProperty(ws_id, ws, message, cell, player);
+                    const updatesProperty = await this.moveFinishProperty(message.body, board.players);
+                    if (typeof updatesProperty === 'string')
+                        throw new Error(updatesProperty);
+                    boardUpdateFields = updatesProperty;
                     break;
                 case 'action':
-                    await this.moveFinishAction(ws_id, ws, message, cell);
+                    const updatesAction = await this.moveFinishAction(message.body, initMoney, board.chanse_current, board.lottery_current, board.players);
+                    if (typeof updatesAction === 'string')
+                        throw new Error(updatesAction);
+                    boardUpdateFields = updatesAction.updateBoard;
+                    title = updatesAction.title;
+                    playerUpdateFields.money = updatesAction.totalMoney;
                     break;
                 case 'tax':
-                    await this.moveFinishTax(ws_id, ws, message, cell, player, newPosition, cell_id);
+                    const updatesTax = this.moveFinishTax(cell_price, player.name);
+                    if (typeof updatesTax === 'string')
+                        throw new Error(updatesTax);
+                    title = updatesTax.title;
+                    boardUpdateFields = updatesTax.updateBoard;
                     break;
                 case 'corner':
-                    await this.moveFinishCorner(ws_id, ws, message, cell, player);
+                    const updatesCorner = this.moveFinishCorner(message.body, board.players, player.name);
+                    if (typeof updatesCorner === 'string')
+                        throw new Error(updatesCorner);
+                    Object.assign(playerUpdateFields, updatesCorner.playerUpdate);
+                    title = updatesCorner.title ? updatesCorner.title : title;
+                    boardUpdateFields = updatesCorner.boardUpdate;
                     break;
             }
+            Object.assign(player, playerUpdateFields);
+            Object.assign(board, boardUpdateFields);
+            const broadData = {
+                method: message.method,
+                title,
+                data: {
+                    board,
+                    player,
+                },
+            };
+            broadcastConnection(ws_id, ws, broadData);
+            await playerService.updateFields(player_id, playerUpdateFields);
+            await gameBoardService.updateBoard(board_id, boardUpdateFields);
         }
         catch (error) {
             logger.error('Failed to update  in finished move:', error);
             return { error, text: 'Failed to  player in finished move' };
         }
     }
-    async moveFinishProperty(boardId, ws, message, cell, player) {
+    async moveFinishProperty(body, players) {
         try {
-            const { cell, board_id, cell_id, isDouble, newPosition, player_id, players, } = message.body;
-            const checkProperty = await propertyService.checkProperty({ board_id, cell_id, player_id, cell });
+            const { cell_rent, cell_price, board_id, cell_id, isDouble, player_id, property_id } = body;
+            const checkProperty = await propertyService.checkProperty({ board_id, cell_id, player_id, cell_rent, property_id });
             if (typeof checkProperty === 'string') {
                 throw new Error(checkProperty);
             }
@@ -92,7 +135,7 @@ export class MoveService {
             let price = 0;
             if (canBuy) {
                 action = 'can buy';
-                price = cell.price;
+                price = cell_price;
             }
             else if (!myProperty) {
                 if (!isMortgage) {
@@ -106,71 +149,43 @@ export class MoveService {
             else if (myProperty) {
                 currentPlayerId = nextPlayerQueue(players, player_id, isDouble);
             }
-            const board = await this.model.findByIdAndUpdate(message.body.board_id, {
-                currentPlayerId,
-                action,
-                price,
-                currentCellPosition: newPosition,
-                currentCellId: cell_id,
-            }, { returnDocument: 'after' });
-            this.cache.addKeyInCache(board_id, board);
-            const broadData = {
-                method: message.method,
-                title: `Игрок ${player.name} останавливается на ${cell.name}`,
-                data: {
-                    board,
-                    player,
-                },
-            };
-            broadcastConnection(boardId, ws, broadData);
+            const boardUpdateFields = { currentPlayerId, action, price };
+            return boardUpdateFields;
         }
         catch (error) {
             logger.error('Failed to update finished move cell corner:', error);
-            return { error, text: 'Failed to update finished move cell corner' };
+            return 'Failed to update finished move cell corner';
         }
     }
-    async moveFinishCorner(boardId, ws, message, cell, player) {
+    moveFinishCorner(body, players, player_name) {
         try {
-            const { board_id, cell_id, isDouble, newPosition, player_id, player_name, players, previous_position } = message.body;
-            let title = `Игрок: ${player_name} останавливается на поле ${cell.name}`;
-            let currentPlayer = player;
-            if (cell.type === 'visit theater') {
-                currentPlayer = await playerService.positionTheatre({
-                    player_id,
-                    previous_position,
-                });
-                title = `Игрок: ${player_name} перемещается на поле театр`;
+            const { isDouble, cell_type, player_id } = body;
+            let title = null;
+            let playerUpdate = {};
+            if (cell_type === 'visit theater') {
+                title = `Игрок: ${player_name} перемещается в театр`;
+                playerUpdate = { position: 10, in_jail: true, current_jail: 4 };
             }
             const currentPlayerId = nextPlayerQueue(players, player_id, isDouble);
-            const board = await this.model.findByIdAndUpdate(message.body.board_id, {
-                currentPlayerId,
-                action: 'start move',
-                currentCellPosition: newPosition,
-                currentCellId: cell_id,
-            }, { returnDocument: 'after' });
-            this.cache.addKeyInCache(board_id, board);
-            const broadData = {
-                method: message.method,
+            const boardUpdate = { currentPlayerId, action: 'start move' };
+            return {
+                boardUpdate,
+                playerUpdate,
                 title,
-                data: {
-                    board,
-                    player: currentPlayer,
-                },
             };
-            broadcastConnection(boardId, ws, broadData);
         }
         catch (error) {
             logger.error('Failed to update finished move cell corner:', error);
-            return { error, text: 'Failed to update finished move cell corner' };
+            return 'Failed to update finished move cell corner';
         }
     }
-    async moveFinishAction(boardId, ws, message, cell) {
+    async moveFinishAction(body, initMoney, chanse_current, lottery_current, players) {
         try {
-            const { board_id, cell_id, isDouble, newPosition, player_id, players, chanse_current, lottery_current } = message.body;
+            const { cell_type, isDouble, player_id } = body;
             let chanceCurrent = chanse_current;
             let lotteryCurrent = lottery_current;
             let actionCard = null;
-            if (cell.type === 'action-chance') {
+            if (cell_type === 'action-chance') {
                 chanceCurrent = chanse_current >= 16 ? 1 : chanceCurrent + 1;
                 actionCard = chanceCards.get(chanceCurrent);
             }
@@ -184,54 +199,33 @@ export class MoveService {
             const price = !actionCard.increment ? actionCard.price : 0;
             const action = !actionCard.increment ? 'need pay' : 'start move';
             const currentPlayerId = !actionCard.increment ? player_id : nextPlayerQueue(players, player_id, isDouble);
-            const board = await this.model.findByIdAndUpdate(message.body.board_id, {
-                currentPlayerId,
-                action,
-                currentCellPosition: newPosition,
-                currentCellId: cell_id,
-                chanse_current: chanceCurrent,
-                lottery_current: lotteryCurrent,
-                price,
-            }, { returnDocument: 'after' });
-            this.cache.addKeyInCache(board_id, board);
-            const player = await playerService.moneyUpdate(player_id, actionCard.price, actionCard.increment);
-            const broadData = {
-                method: message.method,
+            const updateBoard = { currentPlayerId, action, price, chanse_current: chanceCurrent, lottery_current: lotteryCurrent };
+            const totalMoney = actionCard.increment ? initMoney + actionCard.price : initMoney;
+            return {
                 title: actionCard.text,
-                data: {
-                    board,
-                    player,
-                },
+                updateBoard,
+                totalMoney,
             };
-            broadcastConnection(boardId, ws, broadData);
         }
         catch (error) {
             logger.error('Failed to update finished move cell action:', error);
-            return { error, text: 'Failed to update finished move cell action' };
+            return 'Failed to update finished move cell action';
         }
     }
-    async moveFinishTax(boardId, ws, message, cell, player, newPosition, cell_id) {
+    moveFinishTax(cell_price, player_name) {
         try {
-            const board = await this.model.findByIdAndUpdate(message.body.board_id, {
-                action: 'need pay',
-                price: cell.price,
-                currentCellPosition: newPosition,
-                currentCellId: cell_id,
-            }, { returnDocument: 'after' });
-            this.cache.addKeyInCache(message.body.board_id, board);
-            const broadData = {
-                method: message.method,
-                title: `Игроку: ${message.body.player_name} придется оплатить налог в размере ${cell.price}`,
-                data: {
-                    board,
-                    player,
-                },
+            if (!cell_price || !player_name) {
+                throw new Error('Failed to props in move finish tax service');
+            }
+            const updateBoard = { action: 'need pay', price: cell_price };
+            return {
+                updateBoard,
+                title: `Игроку: ${player_name} придется оплатить налог в размере ${cell_price}`,
             };
-            broadcastConnection(boardId, ws, broadData);
         }
         catch (error) {
             logger.error('Failed to update finished move cell tax:', error);
-            return { error, text: 'Failed to update finished move cell tax' };
+            return 'Failed to update finished move cell tax';
         }
     }
 }

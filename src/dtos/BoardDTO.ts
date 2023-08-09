@@ -13,26 +13,6 @@ export interface ConnectBoardDTO {
   boardId: string;
 }
 
-export interface BoardFinishedMoveDTO {
-  method: string;
-  body: {
-    player_id: string;
-    player_name: string;
-    board_id: string;
-    previous_position: number;
-    player_money: number;
-    isDouble: boolean;
-    newPosition: number;
-    cell_id: string;
-    players: string[];
-    lottery_current: number;
-    chanse_current: number;
-    property_id: string | null;
-    cell: ICell;
-    ws_id: number;
-  };
-}
-
 /** Данные при покупке собственности */
 export interface BoardBuyPropertyDTO {
   method: string;
@@ -84,6 +64,7 @@ export interface UpdateDiceDTO {
     player_id: string;
     ws_id: number;
     players: string[];
+    current_jail: number;
   };
 }
 export interface UpdatePropertyDTO {

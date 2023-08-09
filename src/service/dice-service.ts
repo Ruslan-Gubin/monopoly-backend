@@ -30,28 +30,17 @@ export class DiceService {
     }
   }
 
-  public async diceUpdate({ dice_id, user_name,  player_id }: DTO.DiceUpdateDTO): Promise<types.IDice | string> {
+  public async diceUpdate({ dice_id,  fields }: DTO.DiceUpdateDTO): Promise<types.IDice | string> {
     try {
-      if (!dice_id || !user_name || !player_id) {
-        throw new Error('Failed message in dice update service')
+      if (!dice_id ) {
+        throw new Error('Failed id in props dice update service')
+      } else if (typeof fields === 'string') {
+        throw new Error('Failed fields props in dice update service')
       }
-  
-      const dice1 = 10  
-      const dice2 = 10
-      // const dice1 = randomValue(1, 6)
-      // const dice2 = randomValue(1, 6)
-
+      
       const diceUpdate = await this.model.findByIdAndUpdate(
         dice_id,
-        {
-          current_id: player_id,
-          dice1,
-          dice2,
-          value: dice1 + dice2,
-          isDouble: true,
-          // isDouble: dice1 === dice2,
-          user_name,
-        },
+        fields,
         { returnDocument: 'after' }
       ) as types.IDice
 
@@ -84,6 +73,50 @@ export class DiceService {
     } catch (error) {
       logger.error('Failed to get dice in service:', error);
       return 'Failed to get dice in service' ;
+    }
+  }
+
+  public async removeDice(id: string) {
+    try {
+      if (!id) {
+        throw new Error('Failed id in remove dice service')
+      }
+
+      await this.model.findByIdAndDelete(id)
+
+      const cacheDice = this.cache.getValueInKey(id)
+
+      if (cacheDice) {
+        this.cache.removeKeyFromCache(id)
+      }
+
+    } catch (error) {
+      logger.error('Failed to get dice in service:', error);
+      return 'Failed to get dice in service' ;
+    }
+  }
+
+  public roolUpdateFields(player_id: string) {
+    try {
+      if (!player_id) {
+        throw new Error('Failed player id in get rool update fields dice service')
+      }
+      // const dice1 = 5 
+      // const dice2 = 5
+      const dice1 = randomValue(1, 6)
+      const dice2 = randomValue(1, 6)
+
+      return {
+       dice1,
+       dice2,
+       value: dice1 + dice2,
+       isDouble: dice1 === dice2,
+       current_id: player_id,
+    }
+
+    } catch (error) {
+      logger.error('Failed to get update fields dice in service:', error);
+      return 'Failed to get update fields dice in service' ;
     }
   }
 

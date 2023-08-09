@@ -5,13 +5,32 @@ export class PropertyService {
         this.model = PropertyModel;
         this.cache = cache;
     }
+    async getPropertyId(id) {
+        try {
+            if (!id) {
+                throw new Error('Failed to prop id in get property in service');
+            }
+            let property = this.cache.getValueInKey(id);
+            if (!property) {
+                property = await this.model.findById(id);
+                if (!property)
+                    throw new Error('Failed to get Property in db');
+                this.cache.addKeyInCache(id, property);
+            }
+            return property;
+        }
+        catch (error) {
+            logger.error('Failed to create property in service:', error);
+            return 'Failed to create property in service';
+        }
+    }
     async create({ board_id, cell, player_id, player_color }) {
         try {
             if (!board_id || !cell || !player_id || !player_color) {
                 throw new Error('Failed to props in create property service');
             }
             let property;
-            let manyUpdates;
+            let manyUpdates = [];
             if (cell.type === 'property') {
                 const propertys = await this.createProperty({ board_id, cell, player_id, player_color });
                 if (typeof propertys === 'string')
@@ -36,7 +55,7 @@ export class PropertyService {
                 property = newProperty;
                 manyUpdates = manyUpdate;
             }
-            if (!property || !manyUpdates) {
+            if (!property) {
                 throw new Error('Failed update propertyes');
             }
             return { property, manyUpdates };
@@ -205,32 +224,28 @@ export class PropertyService {
             return 'Failed to create property in service';
         }
     }
-    async checkProperty({ board_id, cell_id, player_id, cell }) {
+    async checkProperty({ board_id, cell_id, player_id, cell_rent, property_id }) {
         try {
             if (!board_id || !cell_id || !player_id) {
                 throw new Error('Failed check owner props');
             }
-            let myProperty = false;
-            let canBuy = false;
-            let rent = 0;
-            let isMortgage = false;
-            const property = await this.model.findOne({
-                cell_id,
-                board_id,
-            });
-            if (!property) {
-                canBuy = true;
+            if (!property_id) {
+                return {
+                    myProperty: false,
+                    canBuy: true,
+                    rent: 0,
+                    isMortgage: false,
+                };
             }
-            else {
-                myProperty = property.owner === player_id;
-                rent = myProperty ? 0 : cell.rent[property.current_rent];
-                isMortgage = property.is_mortgage;
-            }
+            let property = await this.getPropertyId(property_id);
+            if (typeof property === 'string')
+                throw new Error(property);
+            const myProperty = property.owner === player_id;
             return {
                 myProperty,
-                canBuy,
-                rent,
-                isMortgage,
+                canBuy: false,
+                rent: myProperty ? 0 : cell_rent[property.current_rent],
+                isMortgage: property.is_mortgage,
             };
         }
         catch (error) {
@@ -302,6 +317,29 @@ export class PropertyService {
         catch (error) {
             logger.error('Failed to update Position service:', error);
             return 'Failed to update Position service';
+        }
+    }
+    async removeAllPropertysBoard(board_id) {
+        try {
+            if (!board_id) {
+                throw new Error('Failed to  player id in update property');
+            }
+            const allPropertysBoard = await this.model.find({ board_id });
+            if (!allPropertysBoard) {
+                throw new Error('Failet to get all propertys in remove all property');
+            }
+            for (const property of allPropertysBoard) {
+                await this.model.findByIdAndDelete(property._id);
+                const id = property._id.toString();
+                const cacheProperty = this.cache.getValueInKey(id);
+                if (cacheProperty) {
+                    this.cache.removeKeyFromCache(id);
+                }
+            }
+        }
+        catch (error) {
+            logger.error('Failed to remove all property in board game service:', error);
+            return 'Failed to remove all property in board game service';
         }
     }
 }

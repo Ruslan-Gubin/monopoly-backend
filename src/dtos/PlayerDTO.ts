@@ -5,7 +5,4 @@ export interface PlayerPositionTheatreDTO {
 export interface PlayerUpdatePositionDTO extends PlayerPositionTheatreDTO {
   newPosition: number;
 }
-export interface PlayerUpdateTheatreCountDTO {
-  player_id: string;
-  isDouble: boolean;
-}
+

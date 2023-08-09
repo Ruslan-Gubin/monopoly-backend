@@ -8,4 +8,5 @@ export interface IDice extends Document {
   prev_value: number; // предыдущее значение на игровом кубике
   prev_player: string; // id предыдущего игрока
   isDouble: boolean; // выпало ли игроку две одинаковые грани
+  double_count: number; // счетчик дублей
 }

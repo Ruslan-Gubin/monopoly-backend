@@ -57,4 +57,20 @@ export class AuctionService {
             return 'Failed to update fields auction';
         }
     }
+    async removeAuction(auction_id) {
+        try {
+            if (!auction_id) {
+                throw new Error('Failed to id in remove auction');
+            }
+            await this.model.findByIdAndDelete(auction_id);
+            const cacheAuction = this.cache.getValueInKey(auction_id);
+            if (cacheAuction) {
+                this.cache.removeKeyFromCache(auction_id);
+            }
+        }
+        catch (error) {
+            logger.error('Failed to remove auction:', error);
+            return 'Failed to remove auction';
+        }
+    }
 }

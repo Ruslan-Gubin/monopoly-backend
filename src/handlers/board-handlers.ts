@@ -9,7 +9,7 @@ export const playerService = new service.PlayerService({ cache: nodeCache });
 export const diceService = new service.DiceService({ cache: nodeCache });
 export const cellService = new service.CellService({ cache: nodeCache });
 export const propertyService = new service.PropertyService({ cache: nodeCache });
-export const moveService = new service.MoveService({ cache: nodeCache });
+export const moveService = new service.MoveService();
 export const propertyActionService = new service.PropertyActionService({ cache: nodeCache });
 export const auctionActionService = new service.AuctionActionService();
 export const auctionService = new service.AuctionService({ cache: nodeCache });
@@ -38,6 +38,7 @@ export const boardHandlers: HandlersType = {
   mortgageProperty: [propertyActionController.handleMessage],
 
   playerGameOver: [gameOverController.handleMessage],
+  removeGame: [gameOverController.handleMessage], 
 
   auctionRefresh: [auctionActionControllerer.handleMessage],
   auctionAction: [auctionActionControllerer.handleMessage],

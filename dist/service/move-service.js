@@ -34,9 +34,10 @@ export class MoveService {
                     Object.assign(board, boardUpdateFields);
                 }
             }
+            const doubleText = dice.isDouble ? 'дубль' : '';
             const broadData = {
                 method: message.method,
-                title: `Игрок: ${user_name} выкидывает ${dice.dice1} и ${dice.dice2}`,
+                title: `${user_name} выкидывает ${doubleText} ${dice.dice1} и ${dice.dice2}`,
                 data: {
                     dice,
                     player,
@@ -70,7 +71,7 @@ export class MoveService {
                 throw new Error(board);
             let playerUpdateFields = { position: newPosition, money: initMoney };
             let boardUpdateFields = null;
-            let title = `Игрок ${player.name} останавливается на ${cell_name}`;
+            let title = `${player.name} попадает на поле ${cell_name}`;
             const cellType = checkCellType(cell_type);
             switch (cellType) {
                 case 'property':
@@ -80,7 +81,7 @@ export class MoveService {
                     boardUpdateFields = updatesProperty;
                     break;
                 case 'action':
-                    const updatesAction = await this.moveFinishAction(message.body, initMoney, board.chanse_current, board.lottery_current, board.players);
+                    const updatesAction = await this.moveFinishAction(message.body, initMoney, board.chanse_current, board.lottery_current, board.players, player.name);
                     if (typeof updatesAction === 'string')
                         throw new Error(updatesAction);
                     boardUpdateFields = updatesAction.updateBoard;
@@ -163,7 +164,7 @@ export class MoveService {
             let title = null;
             let playerUpdate = {};
             if (cell_type === 'visit theater') {
-                title = `Игрок: ${player_name} перемещается в театр`;
+                title = `${player_name} перемещается в театр`;
                 playerUpdate = { position: 10, in_jail: true, current_jail: 4 };
             }
             const currentPlayerId = nextPlayerQueue(players, player_id, isDouble);
@@ -179,19 +180,22 @@ export class MoveService {
             return 'Failed to update finished move cell corner';
         }
     }
-    async moveFinishAction(body, initMoney, chanse_current, lottery_current, players) {
+    async moveFinishAction(body, initMoney, chanse_current, lottery_current, players, player_name) {
         try {
             const { cell_type, isDouble, player_id } = body;
             let chanceCurrent = chanse_current;
             let lotteryCurrent = lottery_current;
             let actionCard = null;
+            let cellTypeText = null;
             if (cell_type === 'action-chance') {
                 chanceCurrent = chanse_current >= 16 ? 1 : chanceCurrent + 1;
                 actionCard = chanceCards.get(chanceCurrent);
+                cellTypeText = `${player_name} попадает на поле Шанс`;
             }
             else {
                 lotteryCurrent = lottery_current >= 9 ? 1 : lotteryCurrent + 1;
                 actionCard = lotteryCards.get(lotteryCurrent);
+                cellTypeText = `${player_name} попадает на поле Лотерея`;
             }
             if (!actionCard) {
                 throw new Error('Failed to action card');
@@ -202,7 +206,7 @@ export class MoveService {
             const updateBoard = { currentPlayerId, action, price, chanse_current: chanceCurrent, lottery_current: lotteryCurrent };
             const totalMoney = actionCard.increment ? initMoney + actionCard.price : initMoney;
             return {
-                title: actionCard.text,
+                title: `${cellTypeText} ${actionCard.text}`,
                 updateBoard,
                 totalMoney,
             };
@@ -220,7 +224,7 @@ export class MoveService {
             const updateBoard = { action: 'need pay', price: cell_price };
             return {
                 updateBoard,
-                title: `Игроку: ${player_name} придется оплатить налог в размере ${cell_price}`,
+                title: `${player_name} должен оплатить налог в размере ${cell_price}`,
             };
         }
         catch (error) {

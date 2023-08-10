@@ -19,7 +19,7 @@ export class AuctionActionService {
             Object.assign(board, updateBoardFields);
             const broadData = {
                 method: message.method,
-                title: `Игрок ${player_name} обьявляет аукцион на недвижемость ${cell_name} начальная цена ${property_price} руб`,
+                title: `${player_name} обьявляет аукцион на недвижемость ${cell_name} начальная цена ${property_price} руб`,
                 data: {
                     board,
                     auction,
@@ -48,23 +48,11 @@ export class AuctionActionService {
             if (action) {
                 currentPrice = price + 50;
                 lastPlayer = player_id;
-                title = `Игрок ${player_name} повышает ставки до ${currentPrice} руб`;
+                title = `${player_name} повышает ставки до ${currentPrice} руб`;
             }
             else {
                 playersList = playersList.filter(player => player !== player_id);
-                title = `Игрок ${player_name} отказывается от участия в аукционе`;
-            }
-            if (playersList.length === 1 && lastPlayer) {
-                const { newProperty, updatePlayer } = await this.winAuction(lastPlayer, price, board_id, cell);
-                const { updateBoard, updateFields } = await this.updateQueue(board_id, playersQueue, currentPlayerQueue, isDouble);
-                property = newProperty;
-                player = updatePlayer;
-                board = updateBoard;
-                updateBoardFields = updateFields;
-                title = `Игрок ${player.name} выигрывает в аукционе ${cell_name} за ${price} Руб`;
-                playersList = [];
-                lastPlayer = null;
-                currentPrice = 0;
+                title = `${player_name} отказывается от участия в аукционе`;
             }
             if (playersList.length === 0 && !lastPlayer) {
                 currentPrice = 0;
@@ -73,6 +61,18 @@ export class AuctionActionService {
                 const { updateBoard, updateFields } = await this.updateQueue(board_id, playersQueue, currentPlayerQueue, isDouble);
                 board = updateBoard;
                 updateBoardFields = updateFields;
+            }
+            if (playersList.length === 1 && !!lastPlayer) {
+                const { newProperty, updatePlayer } = await this.winAuction(lastPlayer, price, board_id, cell);
+                const { updateBoard, updateFields } = await this.updateQueue(board_id, playersQueue, currentPlayerQueue, isDouble);
+                property = newProperty;
+                player = updatePlayer;
+                board = updateBoard;
+                updateBoardFields = updateFields;
+                title = `${player.name} выигрывает в аукционе ${cell_name} за ${price} Руб`;
+                playersList = [];
+                lastPlayer = null;
+                currentPrice = 0;
             }
             const auction = await auctionService.getAuctionId(auction_id);
             if (typeof auction === 'string') {

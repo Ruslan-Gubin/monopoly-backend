@@ -50,4 +50,18 @@ export class MessageService {
             return { error, text: 'Failed to get all messages in service' };
         }
     }
+    async sendMessage(ws, message) {
+        try {
+            const { text, player_name, ws_id } = message.body;
+            const broadData = {
+                method: message.method,
+                title: `${player_name}: ${text}`,
+            };
+            broadcastConnection(ws_id, ws, broadData);
+        }
+        catch (error) {
+            logger.error('Failed to get all messages sesvice:', error);
+            return { error, text: 'Failed to get all messages in service' };
+        }
+    }
 }

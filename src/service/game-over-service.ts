@@ -10,7 +10,7 @@ export class GameOverService {
   async playerGameOver(ws: WebSocket, message: DTO.GameOverPropsDTO) {
     try {
       const { player_id, ws_id, board_id, player_name } = message.body
-      let title = `Игрок ${player_name} становится банкротом`;
+      let title = `${player_name} становится банкротом`;
       let boardAction = 'start move';
 
 
@@ -32,7 +32,7 @@ export class GameOverService {
         if (typeof lastPlayer === 'string') {
           throw new Error(lastPlayer)
         }
-        title = `Игрок ${lastPlayer.name} победитель в этой игре`
+        title = `${lastPlayer.name} победитель в этой игре`
       }
 
       const currentPlayerId = nextPlayerQueue(board.players, player_id, false)

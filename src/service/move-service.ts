@@ -4,10 +4,6 @@ import * as DTO from '../dtos/index.js';
 import * as types from '../types/index.js';
 import { diceService, gameBoardService, playerService, propertyService } from '../handlers/index.js';
 
-/** Todo баг
- * когда красный игрок перемещается на corner (театр)
- * за ним следом идет предыдущий игрок на тоже место автоматически
- */
 
 export class MoveService {
   constructor() {}
@@ -47,10 +43,12 @@ export class MoveService {
           Object.assign(board, boardUpdateFields)
         }
       }
+      
+      const doubleText = dice.isDouble ? 'дубль' : ''
 
       const broadData = {
         method: message.method,
-        title: `Игрок: ${user_name} выкидывает ${dice.dice1} и ${dice.dice2}`,
+        title: `${user_name} выкидывает ${doubleText} ${dice.dice1} и ${dice.dice2}`,
         data: {
           dice,
           player,
@@ -85,7 +83,7 @@ export class MoveService {
 
       let playerUpdateFields = { position: newPosition, money: initMoney }
       let boardUpdateFields = null;
-      let title = `Игрок ${player.name} останавливается на ${cell_name}`;
+      let title = `${player.name} попадает на поле ${cell_name}`;
     
       
       const cellType = checkCellType(cell_type) as 'property' | 'action' | 'corner' | 'tax';
@@ -97,7 +95,7 @@ export class MoveService {
         boardUpdateFields = updatesProperty
           break;
         case 'action':
-        const updatesAction = await this.moveFinishAction(message.body, initMoney, board.chanse_current, board.lottery_current, board.players)
+        const updatesAction = await this.moveFinishAction(message.body, initMoney, board.chanse_current, board.lottery_current, board.players, player.name)
         if (typeof updatesAction === 'string') throw new Error(updatesAction)
 
           boardUpdateFields = updatesAction.updateBoard;
@@ -189,7 +187,7 @@ export class MoveService {
       let playerUpdate = {};
 
       if (cell_type === 'visit theater') {
-        title = `Игрок: ${player_name} перемещается в театр`;
+        title = `${player_name} перемещается в театр`;
         playerUpdate = { position: 10, in_jail: true, current_jail: 4 }
       }
 
@@ -207,20 +205,23 @@ export class MoveService {
     }
   }
 
-  async moveFinishAction(body: DTO.FinishMoveBodyDTO, initMoney: number, chanse_current: number, lottery_current: number, players: string[]) {
+  async moveFinishAction(body: DTO.FinishMoveBodyDTO, initMoney: number, chanse_current: number, lottery_current: number, players: string[], player_name: string) {
     try {
       const { cell_type, isDouble, player_id } = body
 
       let chanceCurrent = chanse_current
       let lotteryCurrent = lottery_current
       let actionCard = null;
+      let cellTypeText = null;
       
       if (cell_type === 'action-chance') {
         chanceCurrent = chanse_current >= 16 ? 1 : chanceCurrent + 1
         actionCard = chanceCards.get(chanceCurrent)
+        cellTypeText = `${player_name} попадает на поле Шанс`
       } else {
         lotteryCurrent = lottery_current >= 9 ? 1 : lotteryCurrent + 1
         actionCard = lotteryCards.get(lotteryCurrent)
+        cellTypeText = `${player_name} попадает на поле Лотерея`
       }
 
       if (!actionCard) {
@@ -236,7 +237,7 @@ export class MoveService {
       const totalMoney = actionCard.increment ? initMoney + actionCard.price : initMoney;
       
       return {
-        title: actionCard.text,
+        title: `${cellTypeText} ${actionCard.text}`,
         updateBoard,
         totalMoney,
         }
@@ -257,7 +258,7 @@ export class MoveService {
 
       return {
         updateBoard,
-        title: `Игроку: ${player_name} придется оплатить налог в размере ${cell_price}`,
+        title: `${player_name} должен оплатить налог в размере ${cell_price}`,
       }
 
     } catch (error) {

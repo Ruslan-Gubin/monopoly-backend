@@ -9,6 +9,9 @@ export class MessageController {
                     case 'createMessage':
                         this.createMessage(ws, message);
                         break;
+                    case 'sendMessage':
+                        this.sendMessage(ws, message);
+                        break;
                 }
             }
             catch (error) {
@@ -23,6 +26,15 @@ export class MessageController {
             catch (error) {
                 logger.error('Failed to create new message:', error);
                 ws.send(JSON.stringify({ error: 'Failed to createMessage' }));
+            }
+        };
+        this.sendMessage = async (ws, message) => {
+            try {
+                await this.messageService.sendMessage(ws, message);
+            }
+            catch (error) {
+                logger.error('Failed to pay tax:', error);
+                ws.send(JSON.stringify({ error: 'Failed to pay tax' }));
             }
         };
     }

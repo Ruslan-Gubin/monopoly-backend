@@ -19,10 +19,6 @@ const PropertySchema = new Schema({
         type: Number,
         required: true,
     },
-    buy_back: {
-        type: Number,
-        required: true,
-    },
     house_count: {
         type: Number,
         default: 0,

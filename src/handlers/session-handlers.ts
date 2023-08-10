@@ -8,9 +8,9 @@ export const messageService = new services.MessageService({ cache: nodeCache, se
 export const sessionService = new services.SessionService({ messageService, cache: nodeCache, sessionId: SESSION_ID })
 export const authService = new services.AuthService({ cache: nodeCache }) 
 
-const sessionController = new controllers.SessionController(sessionService); 
-const messageController = new controllers.MessageController(messageService)
-const confirmationController = new controllers.ConfirmationController(new services.SessionConfirmationService({ sessionService, sessionId: SESSION_ID }))
+export const sessionController = new controllers.SessionController(sessionService); 
+export const messageController = new controllers.MessageController(messageService)
+export const confirmationController = new controllers.ConfirmationController(new services.SessionConfirmationService({ sessionService, sessionId: SESSION_ID }))
 export const authController = new controllers.AuthController(authService)
 
 

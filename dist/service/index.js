@@ -12,3 +12,4 @@ export * from './property-action-service.js';
 export * from './auction-action-service.js';
 export * from './auction-service.js';
 export * from './game-over-service.js';
+export * from './pay-service.js';

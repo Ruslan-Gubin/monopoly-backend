@@ -17,11 +17,7 @@ const PropertySchema: Schema<IProperty> = new Schema({
     type: Number,
     required: true,
   },
-  mortgage_price: { // TODO delete
-    type: Number,
-    required: true,
-  },
-  buy_back: { // TODO delete
+  mortgage_price: { 
     type: Number,
     required: true,
   },

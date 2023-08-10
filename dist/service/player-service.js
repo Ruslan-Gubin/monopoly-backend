@@ -95,17 +95,6 @@ export class PlayerService {
             return 'Failed to update Position service';
         }
     }
-    async setBoardIdInPlaers(players, board_id) {
-        try {
-            for (const player of players) {
-                await this.model.findByIdAndUpdate(player._id, { board_id });
-            }
-        }
-        catch (error) {
-            logger.error('Failed to set board id in players service:', error);
-            return 'Failed to set board id in players service';
-        }
-    }
     async moneyUpdate(player_id, pay, increment) {
         try {
             const payVariant = increment ? +pay : -pay;
@@ -142,7 +131,7 @@ export class PlayerService {
             if (!id) {
                 throw new Error('Failed to id in remove player service');
             }
-            await this.model.findByIdAndDelete(id);
+            await this.model.findByIdAndRemove(id);
             const cachePlayer = this.cache.getValueInKey(id);
             if (cachePlayer) {
                 this.cache.removeKeyFromCache(id);
@@ -152,14 +141,5 @@ export class PlayerService {
             logger.error('Failed to remove players service:', error);
             return 'Failed to remove players service';
         }
-    }
-    async deleteAll() {
-        const allEntity = await this.model.find({});
-        for (const board of allEntity) {
-            await this.model.findByIdAndDelete(board._id);
-        }
-    }
-    getPlayerCache(id) {
-        return this.cache.getValueInKey(id);
     }
 }

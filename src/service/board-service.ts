@@ -1,7 +1,7 @@
 import { Model } from 'mongoose';
 import { WebSocket } from 'ws';
 import { GameBoardModel } from '../models/index.js';
-import { CacheManager, broadcastConnection, logger, randomValue, getUnicNumber, nextPlayerQueue } from '../utils/index.js';
+import { CacheManager, broadcastConnection, logger, randomValue, getUnicNumber } from '../utils/index.js';
 import * as DTO from '../dtos/index.js';
 import * as types from '../types/index.js';
 import { SESSION_ID } from '../config/web-socked.js';
@@ -29,24 +29,17 @@ export class GameBoardService {
       }
 
       const newPlayers = await playerService.createPlayers(body)
-      const newDice = await diceService.createDice()
-      const auction = await auctionService.createAuction()
+      const newDice = await diceService.createDice();
+      const auction = await auctionService.createAuction();
 
-      if (typeof auction === 'string') {
-        throw new Error(auction);
-      }
-      if (typeof newPlayers === 'string') {
-        throw new Error(newPlayers);
-      }
+      if (typeof auction === 'string') throw new Error(auction);
+      if (typeof newPlayers === 'string') throw new Error(newPlayers);
+      if (typeof newDice === 'string') throw new Error(newDice);
 
-      if (typeof newDice === 'string') {
-        throw new Error(newDice);
-      }
-
-      const playersNameList = newPlayers.map(player => player.name).join(' ')
-      const randomPlayer = randomValue(0, newPlayers.length)
-      const chanse_current = randomValue(1, 16)
-      const lottery_current = randomValue(1, 9)
+      const playersNameList = newPlayers.map(player => player.name).join(' ');
+      const randomPlayer = randomValue(0, newPlayers.length);
+      const chanse_current = randomValue(1, 16);
+      const lottery_current = randomValue(1, 9);
 
       const newBoard = await this.model.create({ 
         currentPlayerId: newPlayers[randomPlayer]._id,
@@ -58,27 +51,20 @@ export class GameBoardService {
       });
    
       if (!newBoard) throw new Error('Failed create board in service');
-      
-      const ws_id = getUnicNumber(newBoard._id.toString())
 
-      const updateBoard = await this.model.findByIdAndUpdate(newBoard._id, { 
-        ws_id
-      }, { returnDocument: 'after' }) as types.IGameBoard
-      
-      await playerService.setBoardIdInPlaers(newPlayers, newBoard._id)
-      
-      const id = updateBoard._id.toString()
-      this.cache.addKeyInCache(id, updateBoard)
+      const boardId = newBoard._id.toString();
+      const ws_id = getUnicNumber(boardId);
+      await this.updateBoard(boardId, { ws_id });
 
         const broadData = { 
         method: 'createGameBoard',
         title: `Игроки ${playersNameList} перемещаются на игровое поле`,
-        board_id: updateBoard._id,
+        board_id: boardId,
         user_id: newPlayers.map(player => player.user_id),
       };
     
       broadcastConnection(SESSION_ID, ws, broadData);
-      return newBoard._id
+      return boardId
     } catch (error) {
       logger.error('Failed to create game board in service:', error);
       return { error, text: 'Failed to create game board in service' };
@@ -90,7 +76,7 @@ export class GameBoardService {
         if (!boardId) {
           throw new Error('Failed get board id in params service')
         }
-
+  
         let boardCache = this.cache.getValueInKey(boardId)
 
         if (!boardCache) {
@@ -100,7 +86,7 @@ export class GameBoardService {
           }
           this.cache.addKeyInCache(boardId, boardCache)
         }
-        
+      
         return boardCache as types.IGameBoard
       } catch (error) {
         logger.error('Failed to get  game board in service:', error);
@@ -161,44 +147,6 @@ export class GameBoardService {
     } catch (error) {
       logger.error('Failed to connection session:', error);
       return { error, text: 'Failed to connection sessio' };
-    }
-  }
-
-  async payPrice(ws: WebSocket, message: DTO.BoardPayTaxDTO) {
-    try {
-      const { board_id, player_id, price, isDouble, player_name, players, propertyOwnerId } = message.body
-      const boardId = getUnicNumber(board_id)
-      const nexPlayerId = nextPlayerQueue(players, player_id, isDouble)
-      let propertyOwner = null;
-    
-      const board = await this.model.findByIdAndUpdate(board_id, {
-        currentPlayerId: nexPlayerId,
-        action: 'start move',
-        price: 0,
-      }, { returnDocument: 'after' }) as types.IGameBoard
-  
-      this.cache.addKeyInCache(board_id, board)
-  
-      const player = await playerService.moneyUpdate(player_id, price, false)
-
-      if (propertyOwnerId) {
-       propertyOwner = await playerService.moneyUpdate(propertyOwnerId, price, true)
-      }
-  
-      const broadData = {
-        method: message.method,
-        title: `Игрок ${player_name} оплачивает: ${price} руб`,
-        data: {
-          board,
-          player,
-          propertyOwner,
-        },
-      };
-  
-      broadcastConnection(boardId, ws, broadData);
-    } catch (error) {
-      logger.error('Failed to update finished move cell tax:', error);
-      return { error, text: 'Failed to update finished move cell tax' };
     }
   }
 

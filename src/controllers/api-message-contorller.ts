@@ -1,23 +1,24 @@
 import WebSocket from 'ws';
-import { 
-  MessageService, 
-} from '../service/index.js';
+import { MessageService } from '../service/index.js';
 import * as DTO from '../dtos/index.js';
 import { logger } from '../utils/loger.js';
 
 export class MessageController {
   constructor(private messageService: MessageService) {}
- 
+
   /** Получаем событие с клиента */
   handleMessage = (ws: WebSocket, message: any) => {
-    const method = message.method
+    const method = message.method;
 
     try {
-      switch(method) {
+      switch (method) {
         case 'createMessage':
-          this.createMessage(ws, message)
+          this.createMessage(ws, message);
           break;
-        }
+        case 'sendMessage':
+          this.sendMessage(ws, message);
+          break;
+      }
     } catch (error) {
       logger.error('Failed to handle WebSocket message:', error);
       ws.send(JSON.stringify({ error: 'Failed to MessageController' }));
@@ -27,11 +28,20 @@ export class MessageController {
   /** Пользователь создает новое сообщение */
   private createMessage = async (ws: WebSocket, message: DTO.SessionCreateMessageDTO): Promise<void> => {
     try {
-      await  this.messageService.createMessage(ws, message.body);
+      await this.messageService.createMessage(ws, message.body);
     } catch (error) {
       logger.error('Failed to create new message:', error);
       ws.send(JSON.stringify({ error: 'Failed to createMessage' }));
     }
   };
 
+  /** Пользователь пишет сообщение в игре */
+  private sendMessage = async (ws: WebSocket, message: DTO.GameSendMessageDTO): Promise<void> => {
+    try {
+      await this.messageService.sendMessage(ws, message);
+    } catch (error) {
+      logger.error('Failed to pay tax:', error);
+      ws.send(JSON.stringify({ error: 'Failed to pay tax' }));
+    }
+  };
 }

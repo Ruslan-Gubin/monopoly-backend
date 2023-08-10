@@ -1,11 +1,7 @@
-import { GameBoardModel } from '../models/index.js';
 import { broadcastConnection, logger, nextPlayerQueue } from '../utils/index.js';
-import { playerService, propertyService } from '../handlers/index.js';
+import { gameBoardService, playerService, propertyService } from '../handlers/index.js';
 export class PropertyActionService {
-    constructor({ cache, }) {
-        this.model = GameBoardModel;
-        this.cache = cache;
-    }
+    constructor() { }
     async buyProperty(ws, message) {
         try {
             if (!message) {
@@ -13,23 +9,22 @@ export class PropertyActionService {
             }
             const { board_id, player_id, cell, ws_id, isDouble, players, player_color } = message.body;
             const property = await propertyService.create({ board_id, player_id, cell, player_color });
-            if (typeof property === 'string') {
+            if (typeof property === 'string')
                 throw new Error(property);
-            }
-            const player = await playerService.moneyUpdate(player_id, cell.price, false);
-            if (typeof player === 'string') {
+            const player = await playerService.findPlayerId(player_id);
+            if (typeof player === 'string')
                 throw new Error(player);
-            }
+            const playerUpdateFields = { money: player.money - cell.price };
+            player.money = player.money - cell.price;
+            const board = await gameBoardService.getBoardId(board_id);
+            if (typeof board === 'string')
+                throw new Error(board);
             const currentPlayerId = nextPlayerQueue(players, player_id, isDouble);
-            const board = await this.model.findByIdAndUpdate(board_id, {
-                currentPlayerId,
-                action: 'start move',
-                price: 0,
-            }, { returnDocument: 'after' });
-            this.cache.addKeyInCache(board_id, board);
+            const boardUpdateFields = { currentPlayerId, action: 'start move', price: 0 };
+            Object.assign(board, boardUpdateFields);
             const broadData = {
                 method: message.method,
-                title: `Игрок: ${player.name} покупает ${cell.name}`,
+                title: `${player.name} покупает ${cell.name}`,
                 data: {
                     player,
                     property: property.property,
@@ -38,6 +33,8 @@ export class PropertyActionService {
                 },
             };
             broadcastConnection(ws_id, ws, broadData);
+            await playerService.updateFields(player_id, playerUpdateFields);
+            await gameBoardService.updateBoard(board_id, boardUpdateFields);
         }
         catch (error) {
             logger.error('Failed to  buy property  in service:', error);
@@ -47,17 +44,29 @@ export class PropertyActionService {
     async updateProperty(ws, message) {
         try {
             const { player_id, price, property_id, ws_id, player_name, cellName } = message.body;
-            const property = await propertyService.updateProperty(property_id);
-            const player = await playerService.moneyUpdate(player_id, price, false);
+            const property = await propertyService.getPropertyId(property_id);
+            if (typeof property === 'string')
+                throw new Error(property);
+            const current_rent = property.current_rent + 1;
+            const house_count = property.house_count + 1;
+            property.current_rent = current_rent;
+            property.house_count = house_count;
+            const player = await playerService.findPlayerId(player_id);
+            if (typeof player === 'string')
+                throw new Error(player);
+            const playerUpdateFields = { money: player.money - price };
+            player.money = player.money - price;
             const broadData = {
                 method: message.method,
-                title: `Игрок ${player_name} улучшает поле ${cellName}`,
+                title: `${player_name} улучшает поле ${cellName}`,
                 data: {
                     player,
                     property,
                 },
             };
             broadcastConnection(ws_id, ws, broadData);
+            await playerService.updateFields(player_id, playerUpdateFields);
+            await propertyService.updateFields(property_id, { current_rent, house_count });
         }
         catch (error) {
             logger.error('Failed to update finished move cell tax:', error);
@@ -67,18 +76,28 @@ export class PropertyActionService {
     async mortgageProperty(ws, message) {
         try {
             const { player_id, price, property_id, ws_id, player_name, cellName, value } = message.body;
-            const property = await propertyService.mortgageUpdateProperty(property_id, value);
-            const player = await playerService.moneyUpdate(player_id, price, value);
+            const property = await propertyService.getPropertyId(property_id);
+            if (typeof property === 'string')
+                throw new Error(property);
+            property.is_mortgage = value;
+            const player = await playerService.findPlayerId(player_id);
+            if (typeof player === 'string')
+                throw new Error(player);
+            const money = value ? player.money + price : player.money - price;
+            const playerUpdateFields = { money };
+            player.money = money;
             const titleText = value ? 'закладывает' : 'выкупает';
             const broadData = {
                 method: message.method,
-                title: `Игрок ${player_name} ${titleText} поле ${cellName}`,
+                title: `${player_name} ${titleText} поле ${cellName}`,
                 data: {
                     player,
                     property,
                 },
             };
             broadcastConnection(ws_id, ws, broadData);
+            await playerService.updateFields(player_id, playerUpdateFields);
+            await propertyService.updateFields(property_id, { is_mortgage: value });
         }
         catch (error) {
             logger.error('Failed to update finished move cell tax:', error);

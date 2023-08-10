@@ -52,6 +52,8 @@ export interface BoardPayTaxDTO {
     player_name: string;
     /** ID владельца собственности (кому пойдет оплата) */
     propertyOwnerId: string | undefined;
+    /** ID веб сокета */
+    ws_id: number;
   };
 }
 export interface UpdateDiceDTO {
@@ -76,6 +78,14 @@ export interface UpdatePropertyDTO {
     price: number;
     player_name: string;
     cellName: string;
-    value: boolean
+    value: boolean;
+  };
+}
+export interface GameSendMessageDTO {
+  method: string;
+  body: {
+    player_name: string;
+    ws_id: number;
+    text: string;
   };
 }

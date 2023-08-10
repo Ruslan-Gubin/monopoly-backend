@@ -9,11 +9,11 @@ export interface IProperty  extends Document {
   current_rent: number;
   is_sindicate: boolean;
   house_count: number;
-  mortgage_price: number; // TODO delete
-  buy_back: number; // TODO delete
+  mortgage_price: number;
   is_mortgage: boolean;
   position: number;
   port_count: number;
   utiletes_count: number;
   player_color: string;
 }
+

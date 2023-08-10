@@ -5,7 +5,7 @@ export class GameOverService {
     async playerGameOver(ws, message) {
         try {
             const { player_id, ws_id, board_id, player_name } = message.body;
-            let title = `Игрок ${player_name} становится банкротом`;
+            let title = `${player_name} становится банкротом`;
             let boardAction = 'start move';
             const player = await playerService.findPlayerId(player_id);
             if (typeof player === 'string') {
@@ -22,7 +22,7 @@ export class GameOverService {
                 if (typeof lastPlayer === 'string') {
                     throw new Error(lastPlayer);
                 }
-                title = `Игрок ${lastPlayer.name} победитель в этой игре`;
+                title = `${lastPlayer.name} победитель в этой игре`;
             }
             const currentPlayerId = nextPlayerQueue(board.players, player_id, false);
             const updateBoardFields = { players, action: boardAction, currentPlayerId };

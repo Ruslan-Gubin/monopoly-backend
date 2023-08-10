@@ -73,9 +73,8 @@ export class PropertyService {
             let sindicate = true;
             let currentRent = 1;
             const sindicateList = checkSindicate(cell.position);
-            if (!sindicateList) {
+            if (!sindicateList)
                 throw new Error('Failed to sindicate list');
-            }
             const updateSindicateProperty = [];
             for (const position of sindicateList) {
                 const checkPosition = await this.model.findOne({
@@ -94,9 +93,13 @@ export class PropertyService {
             const manyUpdate = [];
             if (sindicate) {
                 for (const property of updateSindicateProperty) {
-                    const propertyUpdate = await this.model.findByIdAndUpdate(property._id, { is_sindicate: true, current_rent: 1 }, { returnDocument: 'after' });
-                    const id = propertyUpdate._id.toString();
-                    this.cache.addKeyInCache(id, propertyUpdate);
+                    const propertyId = property._id.toString();
+                    const propertyUpdate = await this.updateFields(propertyId, {
+                        is_sindicate: true,
+                        current_rent: 1,
+                    });
+                    if (typeof propertyUpdate === 'string')
+                        throw new Error(propertyUpdate);
                     manyUpdate.push(propertyUpdate);
                 }
             }
@@ -105,7 +108,6 @@ export class PropertyService {
                 board_id: board_id,
                 owner: player_id,
                 mortgage_price: cell.mortgage_value,
-                buy_back: cell.price,
                 position: cell.position,
                 current_rent: currentRent,
                 is_sindicate: sindicate,
@@ -156,7 +158,6 @@ export class PropertyService {
                 board_id: board_id,
                 owner: player_id,
                 mortgage_price: cell.mortgage_value,
-                buy_back: cell.price,
                 position: cell.position,
                 current_rent: port_count - 1,
                 port_count,
@@ -207,7 +208,6 @@ export class PropertyService {
                 board_id: board_id,
                 owner: player_id,
                 mortgage_price: cell.mortgage_value,
-                buy_back: cell.price,
                 position: cell.position,
                 current_rent: utiletes_count - 1,
                 utiletes_count,
@@ -269,38 +269,16 @@ export class PropertyService {
             return 'Failed to get all propertys in service';
         }
     }
-    async updateProperty(property_id) {
+    async updateFields(property_id, fields) {
         try {
-            if (!property_id) {
+            if (!property_id || !fields) {
                 throw new Error('Failed to props property id in update property');
             }
-            const updateProperty = await this.model.findByIdAndUpdate(property_id, {
-                $inc: { current_rent: +1, house_count: +1 }
-            }, { returnDocument: 'after' });
-            if (!updateProperty) {
-                throw new Error('Failed update property');
-            }
-            this.cache.addKeyInCache(property_id, updateProperty);
-            return updateProperty;
-        }
-        catch (error) {
-            logger.error('Failed to update Position service:', error);
-            return 'Failed to update Position service';
-        }
-    }
-    async mortgageUpdateProperty(property_id, value) {
-        try {
-            if (!property_id) {
-                throw new Error('Failed to props property id in update property');
-            }
-            const updateProperty = await this.model.findByIdAndUpdate(property_id, {
-                is_mortgage: value,
-            }, { returnDocument: 'after' });
-            if (!updateProperty) {
-                throw new Error('Failed update property');
-            }
-            this.cache.addKeyInCache(property_id, updateProperty);
-            return updateProperty;
+            const property = await this.model.findByIdAndUpdate(property_id, fields, { returnDocument: 'after' });
+            if (!property)
+                throw new Error('Failed to update property fields');
+            this.cache.addKeyInCache(property_id, property);
+            return property;
         }
         catch (error) {
             logger.error('Failed to update Position service:', error);

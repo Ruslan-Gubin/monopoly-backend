@@ -1,5 +1,5 @@
 import { GameBoardModel } from '../models/index.js';
-import { broadcastConnection, logger, randomValue, getUnicNumber, nextPlayerQueue } from '../utils/index.js';
+import { broadcastConnection, logger, randomValue, getUnicNumber } from '../utils/index.js';
 import { SESSION_ID } from '../config/web-socked.js';
 import { auctionService, cellService, diceService, playerService, propertyService } from '../handlers/index.js';
 export class GameBoardService {
@@ -16,15 +16,12 @@ export class GameBoardService {
             const newPlayers = await playerService.createPlayers(body);
             const newDice = await diceService.createDice();
             const auction = await auctionService.createAuction();
-            if (typeof auction === 'string') {
+            if (typeof auction === 'string')
                 throw new Error(auction);
-            }
-            if (typeof newPlayers === 'string') {
+            if (typeof newPlayers === 'string')
                 throw new Error(newPlayers);
-            }
-            if (typeof newDice === 'string') {
+            if (typeof newDice === 'string')
                 throw new Error(newDice);
-            }
             const playersNameList = newPlayers.map(player => player.name).join(' ');
             const randomPlayer = randomValue(0, newPlayers.length);
             const chanse_current = randomValue(1, 16);
@@ -39,21 +36,17 @@ export class GameBoardService {
             });
             if (!newBoard)
                 throw new Error('Failed create board in service');
-            const ws_id = getUnicNumber(newBoard._id.toString());
-            const updateBoard = await this.model.findByIdAndUpdate(newBoard._id, {
-                ws_id
-            }, { returnDocument: 'after' });
-            await playerService.setBoardIdInPlaers(newPlayers, newBoard._id);
-            const id = updateBoard._id.toString();
-            this.cache.addKeyInCache(id, updateBoard);
+            const boardId = newBoard._id.toString();
+            const ws_id = getUnicNumber(boardId);
+            await this.updateBoard(boardId, { ws_id });
             const broadData = {
                 method: 'createGameBoard',
                 title: `Игроки ${playersNameList} перемещаются на игровое поле`,
-                board_id: updateBoard._id,
+                board_id: boardId,
                 user_id: newPlayers.map(player => player.user_id),
             };
             broadcastConnection(SESSION_ID, ws, broadData);
-            return newBoard._id;
+            return boardId;
         }
         catch (error) {
             logger.error('Failed to create game board in service:', error);
@@ -129,38 +122,6 @@ export class GameBoardService {
         catch (error) {
             logger.error('Failed to connection session:', error);
             return { error, text: 'Failed to connection sessio' };
-        }
-    }
-    async payPrice(ws, message) {
-        try {
-            const { board_id, player_id, price, isDouble, player_name, players, propertyOwnerId } = message.body;
-            const boardId = getUnicNumber(board_id);
-            const nexPlayerId = nextPlayerQueue(players, player_id, isDouble);
-            let propertyOwner = null;
-            const board = await this.model.findByIdAndUpdate(board_id, {
-                currentPlayerId: nexPlayerId,
-                action: 'start move',
-                price: 0,
-            }, { returnDocument: 'after' });
-            this.cache.addKeyInCache(board_id, board);
-            const player = await playerService.moneyUpdate(player_id, price, false);
-            if (propertyOwnerId) {
-                propertyOwner = await playerService.moneyUpdate(propertyOwnerId, price, true);
-            }
-            const broadData = {
-                method: message.method,
-                title: `Игрок ${player_name} оплачивает: ${price} руб`,
-                data: {
-                    board,
-                    player,
-                    propertyOwner,
-                },
-            };
-            broadcastConnection(boardId, ws, broadData);
-        }
-        catch (error) {
-            logger.error('Failed to update finished move cell tax:', error);
-            return { error, text: 'Failed to update finished move cell tax' };
         }
     }
     async removeBoard(id) {

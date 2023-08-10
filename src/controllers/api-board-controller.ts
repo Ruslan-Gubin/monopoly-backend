@@ -20,10 +20,7 @@ export class GameBoardController {
         break;
         case 'disconect':
           this.disconect(ws, message)
-        break;    
-        case 'pay':
-          this.payPrice(ws, message)
-          break;     
+        break;     
         default:
           throw new Error('Invalid method');
       }
@@ -76,16 +73,6 @@ export class GameBoardController {
     } catch (error) {
       logger.error('Failed to disconnect WebSocket:', error);
       ws.send(JSON.stringify({ error: 'Failed to disconnect WebSocket' }));
-    }
-  };
-
-  /** Пользователь оплачивает нужную сумму */
-  private payPrice = async (ws: WebSocket, message: DTO.BoardPayTaxDTO): Promise<void> => {
-    try {
-    await  this.gameBoardService.payPrice(ws, message);
-  } catch (error) {
-    logger.error('Failed to pay tax:', error);
-      ws.send(JSON.stringify({ error: 'Failed to pay tax' }));
     }
   };
 

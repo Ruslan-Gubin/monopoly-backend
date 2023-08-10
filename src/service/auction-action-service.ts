@@ -30,7 +30,7 @@ export class AuctionActionService {
  
       const broadData = {
         method: message.method,
-        title: `Игрок ${player_name} обьявляет аукцион на недвижемость ${cell_name} начальная цена ${property_price} руб`,
+        title: `${player_name} обьявляет аукцион на недвижемость ${cell_name} начальная цена ${property_price} руб`,
         data: {
             board,
             auction,
@@ -62,27 +62,11 @@ export class AuctionActionService {
       if (action) {
         currentPrice = price + 50;
         lastPlayer = player_id
-        title = `Игрок ${player_name} повышает ставки до ${currentPrice} руб`
+        title = `${player_name} повышает ставки до ${currentPrice} руб`
       } else {
         playersList = playersList.filter(player => player !== player_id)
-        title = `Игрок ${player_name} отказывается от участия в аукционе`
+        title = `${player_name} отказывается от участия в аукционе`
       }
-
-
-      if (playersList.length === 1 && lastPlayer) { 
-      const { newProperty, updatePlayer } = await this.winAuction(lastPlayer, price, board_id, cell)
-      const { updateBoard, updateFields } = await this.updateQueue(board_id, playersQueue, currentPlayerQueue, isDouble)
-      property = newProperty
-      player = updatePlayer
-      board = updateBoard
-      updateBoardFields = updateFields
-      
-      title = `Игрок ${player.name} выигрывает в аукционе ${cell_name} за ${price} Руб`;
-      playersList = [];
-      lastPlayer = null;
-      currentPrice = 0;
-      }
-      
 
       if (playersList.length === 0 && !lastPlayer) {
         currentPrice = 0;
@@ -91,6 +75,20 @@ export class AuctionActionService {
         const { updateBoard, updateFields } = await this.updateQueue(board_id, playersQueue, currentPlayerQueue, isDouble)
         board = updateBoard
         updateBoardFields = updateFields
+      }
+
+      if (playersList.length === 1 && !!lastPlayer) { 
+      const { newProperty, updatePlayer } = await this.winAuction(lastPlayer, price, board_id, cell)
+      const { updateBoard, updateFields } = await this.updateQueue(board_id, playersQueue, currentPlayerQueue, isDouble)
+      property = newProperty
+      player = updatePlayer
+      board = updateBoard
+      updateBoardFields = updateFields
+      
+      title = `${player.name} выигрывает в аукционе ${cell_name} за ${price} Руб`;
+      playersList = [];
+      lastPlayer = null;
+      currentPrice = 0;
       }
       
       const auction = await auctionService.getAuctionId(auction_id)
@@ -101,7 +99,7 @@ export class AuctionActionService {
       const updateAuctionFields = { players: playersList, price: currentPrice, last_player_bet: lastPlayer }
       Object.assign(auction, updateAuctionFields)
       
-
+   
       if (board && updateBoardFields) {
         Object.assign(board, updateBoardFields)
       }
@@ -126,11 +124,11 @@ export class AuctionActionService {
       }
     } catch (error) {
       logger.error('Failed to update finished move cell tax:', error);
-      return { error, text: 'Failed to update finished move cell tax' };
+      return { error, text: 'Failed to update finished move cell tax' }; 
     }
   }
 
- private async winAuction(lastPlayer: string, price: number, board_id: string, cell: ICell) {
+ private async winAuction(lastPlayer: string, price: number, board_id: string, cell: ICell) { // TODO UPDATE METHOD
    const updatePlayer = await playerService.moneyUpdate(lastPlayer, price, false)
     if (typeof updatePlayer === 'string') {
       throw new Error(updatePlayer)
@@ -149,7 +147,7 @@ export class AuctionActionService {
     throw new Error(board)
   }
   const currentPlayerId = nextPlayerQueue(playersQueue, currentPlayerQueue, isDouble)
- const updateBoardFields = { action: 'start move', currentPlayerId, price: 0 }
+  const updateBoardFields = { action: 'start move', currentPlayerId, price: 0 }
   Object.assign(board, updateBoardFields)
 
   return { updateFields: updateBoardFields, updateBoard: board }

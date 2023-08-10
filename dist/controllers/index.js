@@ -10,3 +10,4 @@ export * from './api-dice-controller.js';
 export * from './api-move-controller.js';
 export * from './property-action-controller.js';
 export * from './api-game-over-controller.js';
+export * from './api-pay-controller.js';

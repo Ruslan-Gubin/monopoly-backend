@@ -5,6 +5,7 @@ import * as types from '../types/index.js';
 import { broadcastConnection } from '../utils/broadcastConnection.js';
 import { CacheManager } from '../utils/index.js';
 import { logger } from '../utils/loger.js';
+import * as DTO from '../dtos/index.js';
 
 
 export class MessageService { 
@@ -64,6 +65,22 @@ export class MessageService {
       }
           
       return messagesCache;
+    } catch (error) { 
+      logger.error('Failed to get all messages sesvice:', error);
+      return { error, text: 'Failed to get all messages in service' };
+    }
+  }
+
+  async sendMessage(ws: WebSocket, message: DTO.GameSendMessageDTO) {
+    try {
+      const { text, player_name, ws_id } = message.body
+
+      const broadData = {
+        method: message.method,
+        title: `${player_name}: ${text}`,
+      };
+
+      broadcastConnection(ws_id, ws, broadData);
     } catch (error) { 
       logger.error('Failed to get all messages sesvice:', error);
       return { error, text: 'Failed to get all messages in service' };

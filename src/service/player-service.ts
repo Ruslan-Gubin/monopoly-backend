@@ -3,7 +3,6 @@ import { PlayerModel } from '../models/index.js';
 import {  CacheManager,  logger } from '../utils/index.js';
 import * as DTO from '../dtos/index.js';
 import * as types from '../types/index.js';
-import { IPlayer } from '../types/index.js';
 
 
 export class PlayerService {
@@ -122,17 +121,6 @@ export class PlayerService {
     }
   }
 
-  async setBoardIdInPlaers(players: IPlayer[], board_id: string) {
-    try {
-       for (const player of players) {
-      await this.model.findByIdAndUpdate(player._id, { board_id }) 
-    }
-    } catch (error) {
-      logger.error('Failed to set board id in players service:', error);
-      return  'Failed to set board id in players service' ;
-    }
-  }
-
   async moneyUpdate(player_id: string, pay: number, increment: boolean) {
     try {
       const payVariant = increment ? + pay : - pay
@@ -169,7 +157,7 @@ export class PlayerService {
       if (!id) {
         throw new Error('Failed to id in remove player service')
       }
-        await this.model.findByIdAndDelete(id)
+        await this.model.findByIdAndRemove(id)
 
         const cachePlayer = this.cache.getValueInKey(id)
         if (cachePlayer) {
@@ -182,14 +170,4 @@ export class PlayerService {
     }
   }
 
-  async deleteAll() {
-    const allEntity = await this.model.find({})
-    for(const board of allEntity) {
-      await this.model.findByIdAndDelete(board._id)
-    }
-  }
-
-  private getPlayerCache(id: string): types.IPlayer[] | null {
-    return this.cache.getValueInKey(id) as types.IPlayer[] | null;
-  }
 }

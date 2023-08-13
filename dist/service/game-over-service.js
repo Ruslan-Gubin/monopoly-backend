@@ -48,14 +48,19 @@ export class GameOverService {
             return { error, text: 'Failed to update finished move cell tax' };
         }
     }
-    async removeGame(body) {
+    async removeGame(board_id) {
         try {
-            const { board_id, auction_id, dice_id, player_id } = body;
+            const board = await gameBoardService.getBoardId(board_id);
+            if (typeof board === 'string')
+                throw new Error(board);
+            const { auction_id, dice, players } = board;
             await auctionService.removeAuction(auction_id);
-            await diceService.removeDice(dice_id);
-            await gameBoardService.removeBoard(board_id);
-            await playerService.removePlayer(player_id);
+            await diceService.removeDice(dice.toString());
+            for (const player of players) {
+                await playerService.removePlayer(player);
+            }
             await propertyService.removeAllPropertysBoard(board_id);
+            await gameBoardService.removeBoard(board_id);
         }
         catch (error) {
             logger.error('Failed to update finished move cell tax:', error);

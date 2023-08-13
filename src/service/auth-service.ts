@@ -6,6 +6,7 @@ import * as types from '../types/index.js';
 import { UserModel } from '../models/index.js';
 import * as DTO from '../dtos/index.js';
 import { CacheManager, logger } from '../utils/index.js';
+import { messageService } from '../handlers/session-handlers.js';
 
 export class AuthService {
   private readonly model: Model<types.IUser>;
@@ -27,31 +28,40 @@ export class AuthService {
       if (!body) {
         throw new Error('Не получены данные нового пользователя');
       }
+      const { imag } = body
 
       const pas = body.password;
       const salt = await bcrypt.genSalt(10);
       const passwordBcrypt = await bcrypt.hash(pas, salt);
 
-      const image = body.imag;
-      const resImage = await cloudinary.uploader.upload(image, {
+
+      const newUser = await new this.model({
+        ...body,
+        passwordHash: passwordBcrypt,
+      }).save();
+      
+      if (!newUser) {
+        throw new Error('Failed to create new user')
+      }
+      
+      const resImage = await cloudinary.uploader.upload(imag, {
         folder: 'Player',
       });
-
       if (!resImage) {
         throw new Error('Failed create user img');
       }
 
-      const newUser = await new this.model({
-        ...body,
-        image: { public_id: resImage.public_id, url: resImage.secure_url },
-        passwordHash: passwordBcrypt,
-      }).save();
+      const updateImageUser = await this.model.findByIdAndUpdate(newUser._id, {
+      image: { public_id: resImage.public_id, url: resImage.secure_url },
+      }, { returnDocument: 'after' })
+      if (!updateImageUser) throw new Error('Failed to update image in create new user')
 
-      const token = this.getToken(newUser._id);
 
-      const { passwordHash, ...userData } = newUser._doc;
+      const token = this.getToken(updateImageUser._id);
 
-      this.cache.addKeyInCache(userData._id, userData as types.IUser);
+      const { passwordHash, ...userData } = updateImageUser._doc;
+
+      this.cache.addKeyInCache(userData._id.toString(), userData as types.IUser);
 
       return { ...userData, token } as types.IUser;
     } catch (error) {
@@ -157,34 +167,33 @@ export class AuthService {
 
   async updateUser(body: DTO.UpdateUserDTO): Promise<types.IUser | types.IReturnErrorObj> {
     try {
-      const idAuth = body.id;
-      const prevImag = body.prevImag;
-      const fullName = body.fullName;
-      const changeUserImage = body.imag;
+      const { fullName, id, imag, prevImag } = body
 
-      if (!idAuth || !fullName) {
-        throw new Error('Failed to no idAuth or fullName');
+      if (!id || !fullName) {
+        throw new Error('Failed to body data in update user service');
       }
 
-      if (changeUserImage) {
+      if (imag) {
         const updateUserImg = await this.updateUserAndChangeImg({
           fullName,
-          idAuth,
-          prevImag,
-          newAvatar: changeUserImage,
+          idAuth: id,
+          prevImag, 
+          newAvatar: imag,
         });
+        if (typeof updateUserImg === 'string') throw new Error('Failed update user image')
+        await messageService.updateAllUserMessages(updateUserImg._id, updateUserImg.fullName, updateUserImg.image.url)
+
         return updateUserImg;
       }
 
-      const updateUser = await this.model.findByIdAndUpdate(idAuth, { fullName }, { returnDocument: 'after' });
+      const updateUser = await this.model.findByIdAndUpdate(id, { fullName }, { returnDocument: 'after' });
+      if (!updateUser) throw new Error('Failed to update user');
 
-      if (!updateUser) {
-        throw new Error('Failed to update user');
-      }
+      await messageService.updateAllUserMessages(updateUser._id, updateUser.fullName, updateUser.image.url)
 
       const { passwordHash, ...userData } = updateUser._doc;
 
-      this.cache.addKeyInCache(idAuth, userData as types.IUser);
+      this.cache.addKeyInCache(id, userData as types.IUser);
 
       return userData as types.IUser;
     } catch (error) {
@@ -195,7 +204,7 @@ export class AuthService {
 
   private updateUserAndChangeImg = async ({ prevImag, idAuth, fullName, newAvatar }: DTO.UserUpdateAndImgDTO) => {
     try {
-      await cloudinary.uploader.destroy(prevImag); // remove prev avatar
+      await cloudinary.uploader.destroy(prevImag);
 
       const result = await cloudinary.uploader.upload(newAvatar, {
         folder: 'Player',
@@ -220,7 +229,8 @@ export class AuthService {
       return userData as types.IUser;
     } catch (error) {
       logger.error('Failed to update user and user img:', error);
-      return { error, text: 'Failed to update user and user img' };
+      return  'Failed to update user and user img' ;
     }
   };
+
 }

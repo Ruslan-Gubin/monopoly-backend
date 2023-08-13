@@ -37,16 +37,11 @@ export class PlayerService {
                 throw new Error('Failed boardId in get players service');
             }
             const playersBoard = [];
-            for (const player of players) {
-                let playerCache = this.cache.getValueInKey(player);
-                if (!playerCache) {
-                    playerCache = await this.model.findById(player);
-                    if (!playerCache) {
-                        throw new Error('Failed get players id board');
-                    }
-                    this.cache.addKeyInCache(player, playerCache);
-                }
-                playersBoard.push(playerCache);
+            for (const playerId of players) {
+                const player = await this.findPlayerId(playerId);
+                if (typeof player === 'string')
+                    throw new Error('Failet get player in get board players');
+                playersBoard.push(player);
             }
             return playersBoard;
         }
@@ -75,13 +70,25 @@ export class PlayerService {
             return 'Failed to get player in service';
         }
     }
-    async updatePosition({ player_id, newPosition, previous_position }) {
+    async findPlayerForUser(user_id) {
+        try {
+            const player = await this.model.findOne({ user_id });
+            if (!player)
+                return null;
+            return player._id.toString();
+        }
+        catch (error) {
+            logger.error('Failed to  get player for user service:', error);
+            return null;
+        }
+    }
+    async updatePosition({ player_id, newPosition, previous_position, }) {
         try {
             const increment = previous_position > newPosition ? 200 : 0;
             const updatePlayer = await this.model.findByIdAndUpdate(player_id, {
                 position: newPosition,
                 previous_position,
-                $inc: { money: +increment }
+                $inc: { money: +increment },
             }, { returnDocument: 'after' });
             if (!updatePlayer) {
                 throw new Error('Failed get players update board');
@@ -98,9 +105,9 @@ export class PlayerService {
     async moneyUpdate(player_id, pay, increment) {
         try {
             const payVariant = increment ? +pay : -pay;
-            const player = await this.model.findByIdAndUpdate(player_id, {
-                $inc: { money: payVariant }
-            }, { returnDocument: 'after' });
+            const player = (await this.model.findByIdAndUpdate(player_id, {
+                $inc: { money: payVariant },
+            }, { returnDocument: 'after' }));
             this.cache.addKeyInCache(player_id, player);
             return player;
         }

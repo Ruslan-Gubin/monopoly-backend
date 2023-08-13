@@ -41,7 +41,7 @@ export class AuthController {
       res.status(500).json({ error: 'Не удалось создать пользователя', errorMessage: error });
     }
   };
-
+ 
   /** Авторизация пользователя */
   authorizeUser = async (req: IRequestBody<DTO.AuthorizationUserDTO>, res: Response) => {
     try {

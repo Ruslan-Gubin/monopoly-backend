@@ -3,7 +3,7 @@ import { broadcastConnection, logger, randomValue, getUnicNumber } from '../util
 import { SESSION_ID } from '../config/web-socked.js';
 import { auctionService, cellService, diceService, playerService, propertyService } from '../handlers/index.js';
 export class GameBoardService {
-    constructor({ cache, }) {
+    constructor({ cache }) {
         this.allGameBoardKey = 'allGameBoard';
         this.model = GameBoardModel;
         this.cache = cache;
@@ -22,13 +22,13 @@ export class GameBoardService {
                 throw new Error(newPlayers);
             if (typeof newDice === 'string')
                 throw new Error(newDice);
-            const playersNameList = newPlayers.map(player => player.name).join(' ');
+            const playersNameList = newPlayers.map((player) => player.name).join(' ');
             const randomPlayer = randomValue(0, newPlayers.length);
             const chanse_current = randomValue(1, 16);
             const lottery_current = randomValue(1, 9);
             const newBoard = await this.model.create({
                 currentPlayerId: newPlayers[randomPlayer]._id,
-                players: newPlayers.map(player => player._id),
+                players: newPlayers.map((player) => player._id),
                 auction_id: auction._id.toString(),
                 dice: newDice,
                 chanse_current,
@@ -43,7 +43,7 @@ export class GameBoardService {
                 method: 'createGameBoard',
                 title: `Игроки ${playersNameList} перемещаются на игровое поле`,
                 board_id: boardId,
-                user_id: newPlayers.map(player => player.user_id),
+                user_id: newPlayers.map((player) => player.user_id),
             };
             broadcastConnection(SESSION_ID, ws, broadData);
             return boardId;
@@ -73,6 +73,59 @@ export class GameBoardService {
             return 'Failed to get  game board in service';
         }
     }
+    async getAllBoardsGame() {
+        try {
+            const response = [];
+            const boards = await this.model.find({});
+            if (!boards)
+                throw new Error('Failed to get all game boards in service');
+            for (const board of boards) {
+                const players = await playerService.getBoardPlayers(board.players);
+                if (typeof players === 'string')
+                    throw new Error('Failed to get players in board service');
+                const playersData = [];
+                players.forEach((player) => playersData.push({
+                    image: player.image,
+                    color: player.color,
+                    name: player.name,
+                    user_id: player.user_id.toString(),
+                }));
+                response.push({ board_id: board._id, date_create: board.createdAt, player_list: playersData });
+            }
+            return response;
+        }
+        catch (error) {
+            logger.error('Failed to get all game boards in service:', error);
+            return 'Failed to get all game boards in service';
+        }
+    }
+    async getAllBoards() {
+        try {
+            const allBoards = this.model.find({});
+            if (!allBoards)
+                throw new Error('Failet to get all boards in service');
+            return allBoards;
+        }
+        catch (error) {
+            logger.error('Failed to get  all game board in service:', error);
+            return 'Failed to get  all game board in service';
+        }
+    }
+    async checkActiveGameToPlayer(userId) {
+        try {
+            const playerId = await playerService.findPlayerForUser(userId);
+            if (!playerId)
+                return null;
+            const board = await this.model.findOne({ players: { $elemMatch: { $eq: playerId } } });
+            if (!board)
+                return null;
+            return board._id.toString();
+        }
+        catch (error) {
+            logger.error('Failed to check active game in service:', error);
+            return null;
+        }
+    }
     async updateBoard(boardId, fields) {
         try {
             if (!boardId || !fields) {
@@ -93,7 +146,7 @@ export class GameBoardService {
         try {
             const boardId = getUnicNumber(message.boardId);
             ws.id = boardId;
-            const board = await this.getBoardId(message.boardId);
+            const board = (await this.getBoardId(message.boardId));
             const cells = await cellService.getAllCells('nep');
             const players = await playerService.getBoardPlayers(board.players);
             const propertys = await propertyService.getAllPropertys(message.boardId);
@@ -111,7 +164,7 @@ export class GameBoardService {
                     dice,
                     propertys,
                     auction,
-                }
+                },
             }));
             const broadData = {
                 method: message.method,

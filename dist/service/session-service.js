@@ -1,5 +1,6 @@
 import { SessionModel } from '../models/index.js';
 import { broadcastConnection, logger } from '../utils/index.js';
+import { gameBoardService } from '../handlers/index.js';
 export class SessionService {
     constructor({ messageService, cache, sessionId, }) {
         this.allSessionKey = 'allSessions';
@@ -11,16 +12,21 @@ export class SessionService {
     async connectedSession(ws, message) {
         try {
             ws.id = this.sessionId;
+            const { fullName, id } = message;
             const sessions = await this.getAllSessions();
             if (!sessions) {
                 throw new Error('Failed to get all sessions');
             }
             ws.send(JSON.stringify({ method: 'connectData', data: sessions }));
-            const selectionMessages = await this.messageService.getMessages();
+            const messages = await this.messageService.getMessages();
+            if (typeof messages === 'string')
+                throw new Error(messages);
+            const boardId = await gameBoardService.checkActiveGameToPlayer(id);
             const broadData = {
                 method: 'connectedUser',
-                title: `Пользователь ${message.fullName} подключен`,
-                messages: selectionMessages,
+                title: `Пользователь ${fullName} подключен`,
+                messages,
+                boardId,
             };
             broadcastConnection(this.sessionId, ws, broadData);
         }

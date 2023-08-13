@@ -61,4 +61,9 @@ export interface IGameBoard extends Document {
    * @type { IGameBoard }
    */
   _doc: IGameBoard
+   /**
+   * Дата создания
+   * @type { string }
+   */
+   createdAt: string
 }

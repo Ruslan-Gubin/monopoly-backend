@@ -3,7 +3,7 @@ import * as service from '../service/index.js';
 import { HandlersType } from '../types/index.js';
 import { nodeCache } from '../utils/index.js';
 import { authController, messageController } from './session-handlers.js';
-
+ 
 export const gameBoardService = new service.GameBoardService({ cache: nodeCache });
 export const playerService = new service.PlayerService({ cache: nodeCache });
 export const diceService = new service.DiceService({ cache: nodeCache });
@@ -15,7 +15,7 @@ export const auctionActionService = new service.AuctionActionService();
 export const moveService = new service.MoveService();
 export const payService = new service.PayService();
 export const gameOverService = new service.GameOverService();
-
+    
 export const cellController = new controller.CellController(cellService);
 export const gameBoardController = new controller.GameBoardController(gameBoardService);
 export const playerController = new controller.PlayerController(playerService);
@@ -32,7 +32,7 @@ export const boardHandlers: HandlersType = {
   roolDice: [moveController.handleMessage],
   finishedMove: [moveController.handleMessage],
   pay: [payController.handleMessage],
-  buyProperty: [propertyActionController.handleMessage],
+  buyProperty: [propertyActionController.handleMessage], 
   updateProperty: [propertyActionController.handleMessage],
   mortgageProperty: [propertyActionController.handleMessage],
   playerGameOver: [gameOverController.handleMessage],

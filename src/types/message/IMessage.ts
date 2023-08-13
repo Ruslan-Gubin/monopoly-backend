@@ -4,10 +4,7 @@ export interface IMessage {
   createdAt: string;
   authorId: string;
   fullName: string;
-  image: { 
-    public_id: string;
-    url: string;
-   }
+  image: string;
 }
 
 

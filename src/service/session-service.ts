@@ -5,6 +5,7 @@ import { MessageService } from './message-service.js';
 import { CacheManager, broadcastConnection, logger } from '../utils/index.js';
 import * as DTO from '../dtos/index.js';
 import * as types from '../types/index.js';
+import { gameBoardService } from '../handlers/index.js';
 
 export class SessionService {
   private sessionId: number;
@@ -31,6 +32,7 @@ export class SessionService {
   async connectedSession(ws: types.ExtendedWebSocket, message: DTO.SessionConnectDTO) {
     try {
       ws.id = this.sessionId;
+      const { fullName, id } = message
 
       const sessions = await this.getAllSessions();
 
@@ -40,12 +42,16 @@ export class SessionService {
 
       ws.send(JSON.stringify({ method: 'connectData', data: sessions })); 
 
-      const selectionMessages = await this.messageService.getMessages();
+      const messages = await this.messageService.getMessages();
+      if (typeof messages === 'string') throw new Error(messages)
+
+      const boardId = await gameBoardService.checkActiveGameToPlayer(id)
 
       const broadData = {
         method: 'connectedUser',
-        title: `Пользователь ${message.fullName} подключен`,
-        messages: selectionMessages,
+        title: `Пользователь ${fullName} подключен`,
+        messages,
+        boardId,
       };
 
       broadcastConnection(this.sessionId, ws, broadData);
@@ -154,7 +160,7 @@ export class SessionService {
         throw new Error('Failed to body method or fullName or id in remove session');
       }
       const { fullName, id, method } = message;
-
+      
       const removeSession = await this.model.findByIdAndDelete(id);
 
       if (!removeSession) {

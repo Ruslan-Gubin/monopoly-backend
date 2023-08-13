@@ -10,7 +10,4 @@ export interface GameOverPropsDTO {
 
 export interface RemoveGameDTO {
     board_id: string;
-    auction_id: string,
-    dice_id: string,
-    player_id: string,
 }

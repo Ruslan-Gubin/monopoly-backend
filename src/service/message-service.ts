@@ -54,7 +54,7 @@ export class MessageService {
     }
   }
 
-  async getMessages(): Promise<types.IMessage[] | types.IReturnErrorObj  > {
+  async getMessages(): Promise<types.IMessage[] | string  > {
     try {
       let messagesCache = (this.cache.getValueInKey(this.allMessagesKey)) as types.IMessage[]
 
@@ -67,7 +67,7 @@ export class MessageService {
       return messagesCache;
     } catch (error) { 
       logger.error('Failed to get all messages sesvice:', error);
-      return { error, text: 'Failed to get all messages in service' };
+      return 'Failed to get all messages in service';
     }
   }
 
@@ -84,6 +84,26 @@ export class MessageService {
     } catch (error) { 
       logger.error('Failed to get all messages sesvice:', error);
       return { error, text: 'Failed to get all messages in service' };
+    }
+  }
+
+  async updateAllUserMessages(authorId: string, fullName: string, image: string) {
+    try {
+      await this.model.updateMany( {authorId}, { fullName, image })
+
+      const allUserMessagesCache = this.cache.getValueInKey(this.allMessagesKey) as types.IMessage[]
+  
+      for (const message of allUserMessagesCache) {
+        if (message.authorId !== authorId.toString()) {
+          continue;
+        } 
+          message.fullName = fullName;
+          message.image = image
+      }
+
+    } catch (error) { 
+      logger.error('Failed to get all user messages sesvice:', error);
+      return { error, text: 'Failed to get all user messages in service' };
     }
   }
 }

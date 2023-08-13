@@ -89,3 +89,16 @@ export interface GameSendMessageDTO {
     text: string;
   };
 }
+
+export interface GetAllBoardsPlayersDTO {
+  image: string;
+  color: string;
+  name: string;
+  user_id: string;
+}
+
+export interface GetAllBoardsResponseDTO {
+  board_id: string;
+  date_create: string;
+  player_list: GetAllBoardsPlayersDTO[];
+}

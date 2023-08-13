@@ -47,7 +47,7 @@ export class MessageService {
         }
         catch (error) {
             logger.error('Failed to get all messages sesvice:', error);
-            return { error, text: 'Failed to get all messages in service' };
+            return 'Failed to get all messages in service';
         }
     }
     async sendMessage(ws, message) {
@@ -62,6 +62,23 @@ export class MessageService {
         catch (error) {
             logger.error('Failed to get all messages sesvice:', error);
             return { error, text: 'Failed to get all messages in service' };
+        }
+    }
+    async updateAllUserMessages(authorId, fullName, image) {
+        try {
+            await this.model.updateMany({ authorId }, { fullName, image });
+            const allUserMessagesCache = this.cache.getValueInKey(this.allMessagesKey);
+            for (const message of allUserMessagesCache) {
+                if (message.authorId !== authorId.toString()) {
+                    continue;
+                }
+                message.fullName = fullName;
+                message.image = image;
+            }
+        }
+        catch (error) {
+            logger.error('Failed to get all user messages sesvice:', error);
+            return { error, text: 'Failed to get all user messages in service' };
         }
     }
 }

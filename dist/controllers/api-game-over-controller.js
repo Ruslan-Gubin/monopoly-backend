@@ -10,7 +10,7 @@ export class GameOverController {
                         this.playerGameOver(ws, message);
                         break;
                     case 'removeGame':
-                        this.removeGame(ws, message);
+                        this.removeGame(message.body.board_id);
                         break;
                     default:
                         throw new Error('Invalid method');
@@ -30,14 +30,12 @@ export class GameOverController {
                 ws.send(JSON.stringify({ error: 'Failed to connect WebSocket' }));
             }
         };
-        this.removeGame = async (ws, message) => {
+        this.removeGame = async (board_id) => {
             try {
-                const body = message.body;
-                await this.gameOverService.removeGame(body);
+                await this.gameOverService.removeGame(board_id);
             }
             catch (error) {
                 logger.error('Failed to connect WebSocket:', error);
-                ws.send(JSON.stringify({ error: 'Failed to connect WebSocket' }));
             }
         };
     }

@@ -31,6 +31,7 @@ app.use(routes.cellRouter);
 app.use(routes.gameBoardRouter);
 app.use(routes.playerRouter);
 app.use(routes.diceRouter);
+app.use(routes.connectRouter);
 
 app.listen(process.env['PORT'] || 4444, () => {
   logger.connectSuccess(`Listening port ${process.env['PORT'] || 4444}`)

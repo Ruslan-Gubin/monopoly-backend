@@ -13,3 +13,4 @@ export * from './auction-action-service.js';
 export * from './auction-service.js';
 export * from './game-over-service.js';
 export * from './pay-service.js';
+export * from './connect-service.js';

@@ -4,3 +4,4 @@ export * from './api-cellRoutes.js';
 export * from './api-board-routes.js';
 export * from './api-player-routers.js';
 export * from './api-dice-router.js';
+export * from './api-conntect.js';

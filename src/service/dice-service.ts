@@ -101,8 +101,7 @@ export class DiceService {
       if (!player_id) {
         throw new Error('Failed player id in get rool update fields dice service')
       }
-      // const dice1 = 1 
-      // const dice2 = 1
+
       const dice1 = randomValue(1, 6)
       const dice2 = randomValue(1, 6)
 

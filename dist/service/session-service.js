@@ -27,6 +27,7 @@ export class SessionService {
                 title: `Пользователь ${fullName} подключен`,
                 messages,
                 boardId,
+                userId: id,
             };
             broadcastConnection(this.sessionId, ws, broadData);
         }

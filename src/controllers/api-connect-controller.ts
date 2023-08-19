@@ -1,5 +1,5 @@
 import { Response } from 'express-serve-static-core';
-import { IRequestParams } from '../types/IRequestRespons/index.js';
+import { IRequestParams, IRequestBody } from '../types/IRequestRespons/index.js';
 import {  ConnectService } from '../service/index.js';
 import { logger } from '../utils/index.js';
 

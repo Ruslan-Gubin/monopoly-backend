@@ -1,6 +1,6 @@
 import { Model, UpdateWriteOpResult } from 'mongoose';
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcrypt'; 
 import { cloudinary } from '../config/cloudinary.js';
 import * as types from '../types/index.js';
 import { UserModel } from '../models/index.js';

@@ -5,13 +5,13 @@ import cors from "cors";
 import * as dotenv from "dotenv";
 import * as routes from "./routes/index.js";
 import { logger } from "./utils/index.js";
-
+ 
 const { app, getWss } = expressWs(express()) 
 
 const aWss = getWss()
 dotenv.config();
 app.use(cors());
-app.use(express.json({limit: '50mb'}));  
+app.use(express.json({limit: '50mb'})); 
 
 
 (async () => {

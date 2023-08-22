@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals';
-import { CacheManager } from '../../../utils/CacheManager';
+import { CacheManager } from '../../../utils/CacheManager.js';
 
 describe('CacheManager', () => {
   let cacheManager: CacheManager<string>;

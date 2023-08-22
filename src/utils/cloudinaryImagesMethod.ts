@@ -1,5 +1,6 @@
 import { cloudinary } from "../config/cloudinary.js";
 import { ICloudinaryImage } from "../types/index.js";
+import { UploadApiResponse } from 'cloudinary';
 
 const cloudinaryImagesMethod = async (file: string, folder: string): Promise<ICloudinaryImage> => {
 return new Promise<ICloudinaryImage>((resolve, reject) => {
@@ -17,7 +18,7 @@ return new Promise<ICloudinaryImage>((resolve, reject) => {
 }
 
 const cloudinaryImagesRemove = async (imag: string): Promise<void> => {
- await cloudinary.uploader.destroy(imag, (err, res) => {
+ await cloudinary.uploader.destroy(imag, (err: Error, res: UploadApiResponse) => {
     if (err) return res.status(500).send('destroy image error')
   })
 }
